@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rayleigh: Search by multiple colors</title>
+  <link href="/static/css/main.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+  <div id="content">
+    <div id="colors">
+      <p>Possible colors:</p>
+      <p>
+      <a id="#ffffff"><span style="background-color: #fff" /></a>
+      <a id="#999999"><span style="background-color: #999" /></a>
+      <a id="#000000"><span style="background-color: #000" /></a>
+      <br />
+      <a id="#0000ff"><span style="background-color: #00f" /></a>
+      <a id="#00ffff"><span style="background-color: #0ff" /></a>
+      <a id="#00ff00"><span style="background-color: #0f0" /></a>
+      <a id="#ffff00"><span style="background-color: #ff0" /></a>
+      <a id="#ff0000"><span style="background-color: #f00" /></a>
+      <a id="#ff00ff"><span style="background-color: #f0f" /></a>
+<!--       <br />
+      <a id="#aaaaff"><span style="background-color: #aaf" /></a>
+      <a id="#aaffff"><span style="background-color: #aff" /></a>
+      <a id="#aaffaa"><span style="background-color: #afa" /></a>
+      <a id="#ffffaa"><span style="background-color: #ffa" /></a>
+      <a id="#ffaaaa"><span style="background-color: #faa" /></a>
+      <a id="#ffaaff"><span style="background-color: #faf" /></a> -->
+      </p>
+      <p>
+      <form id="selected-colors-submit" method="get" action="/images">
+        <input type="hidden" id="colors" name="colors" value="" />
+        <input id="submitButton" type="submit" value="Search" onClick="getImages(); return false;" />
+      </form>
+      </p>
+    </div>
+    <div id="images">
+      Images that match the colors:
+    </div>
+  </div>
+  <script src="/static/js/ext/jquery-1.8.3.js"></script>
+  <script>
+    $(document).ready(function() {
+      console.log("The palette is:", $('#colors a').map(function(i,el) { return el.id; }));
+
+      getImages = function(event) {
+        var colors = Object.keys(selected_colors);
+        $.getJSON('/images', data={colors: colors.join(',')},
+          success=function(json_data) {
+            console.log("Received: ", json_data);
+
+        items = [];
+        $.each(json_data, function(i, val) {
+          items.push('<li><img src=file://' + val['filename'] + ' />' + val['distance'] + '</li>');
+        });
+        console.log(items);
+
+        $('<ul/>', {
+          'class': 'my-new-list',
+          html: items.join('')
+        }).appendTo($('#images'));
+        });
+      }
+
+      selected_colors = {};
+
+      var toggleSelected = function(event) {
+        if (this.getAttribute('class') == 'selected') {
+          delete(selected_colors[this.id]);
+          this.setAttribute('class', '');
+        } else {
+          selected_colors[this.id] = 1;
+          this.setAttribute('class', 'selected');
+        }
+        console.log("Selected colors:");
+        console.log(selected_colors);
+        $('#colors input')[0].value = Object.keys(selected_colors);
+      };
+
+      $('a').each(function(i,el) {
+        el.onclick = toggleSelected;  
+      });
+
+      
+    });
+  </script>
+</body>
+</html>

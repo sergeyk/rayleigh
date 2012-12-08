@@ -1,0 +1,77 @@
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+body {
+  line-height: 1;
+  color: black;
+  background: white;
+}
+p+p {
+  margin-top: 10px;
+}
+ol, ul {
+  list-style: none;
+}
+a img {
+  border: none;
+}
+
+html {
+  background: #eeeeee;
+}
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4em;
+  background: #eeeeee;
+  color: #333333;
+}
+
+#images {
+  float: left;
+  width: 800px;
+}
+
+#colors {
+  float: left;
+  width: 300px;
+}
+
+#colors a {
+  width: 35px;
+  height: 22px;
+  display: inline-block;
+  border: 1px solid black;
+  margin: 3px;
+}
+
+#colors a.selected {
+  border: 3px solid black;
+  margin: 1px;
+}
+
+#colors span {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+
+#colors #selected-colors {
+  width: 300px;
+  height: 30px;
+  border: 1px solid black;
+}
