@@ -12,9 +12,15 @@ class TestImage(unittest.TestCase):
     """
     def plot_palette_histogram(image_filename):
       img = rayleigh.Image(os.path.join(support_dirname, image_filename))
+
       palette_filename = os.path.join(support_dirname, 'palette.json')
       hex_palette = json.load(open(palette_filename))
+      hex_palette = rayleigh.create_palette()
+
       lab_palette = rayleigh.lab_palette(hex_palette)
+
+      img.quantize_to_palette(lab_palette)
+
       lab_hist = img.histogram_colors(lab_palette)
       plt.clf()
       plt.bar(range(len(lab_hist)), lab_hist, color=hex_palette, edgecolor='black')
