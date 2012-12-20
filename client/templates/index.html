@@ -144,16 +144,14 @@
           success=function(json_data) {
             console.log("Received: ", json_data);
 
-        items = [];
-        $.each(json_data, function(i, val) {
-          items.push('<li><img src=file://' + val['filename'] + ' />' + val['distance'] + '</li>');
-        });
-        console.log(items);
+            items = [];
+            $.each(json_data, function(i, val) {
+              filename = val['filename'].replace('/Volumes/WD Data/', '/static/')
+              items.push('<img src="' + filename + '" alt="' + val['distance'] + '" width="'+val['width']/2+'" height="'+val['height']/2+'" />');
+            });
+            console.log(items);
 
-        $('<ul/>', {
-          'class': 'my-new-list',
-          html: items.join('')
-        }).appendTo($('#images'));
+            $('#images').html(items.join(''));
         });
       }
 

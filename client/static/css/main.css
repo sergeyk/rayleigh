@@ -33,6 +33,7 @@ a img {
 html {
   background: #eeeeee;
 }
+
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -43,7 +44,11 @@ body {
 
 #images {
   float: left;
-  width: 800px;
+  width: 1000px;
+}
+
+#images img {
+  margin: 7px;
 }
 
 #colors {

@@ -11,6 +11,8 @@ import os
 repo_dirname = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
 sys.path.insert(0, repo_dirname)
 
+from IPython import embed
+
 import rayleigh
 
 ### Util methods
@@ -29,7 +31,7 @@ def bad_id_response():
 app = Flask(__name__)
 app.debug = True # TODO: comment out in production
 
-ic = rayleigh.ImageCollection.load('../data/mir100.pickle')
+ic = rayleigh.ImageCollection.load('../data/mir10000.pickle')
 
 @app.route('/')
 def index():
@@ -55,12 +57,19 @@ def get_images():
   """
   Get all images sorted by distance to the color histogram given.
   """
-  print(request.args)
+  print("Request args: %s"%request.args)
   colors = request.args.get('colors', '').split(',')
   values = request.args.get('values', None)
-  if values is None: values = np.ones(len(colors)).tolist()
+  if values is None:
+    values = np.ones(len(colors), 'float') / len(colors)
+  else:
+    values = np.array(values, 'float') / sum(values)
 
-  data = ic.search_by_image('../test/support/landscape.jpg')
+  lab_colors = rayleigh.lab_palette(colors)
+  color_hist = rayleigh.smoothed_histogram(ic.lab_palette, lab_colors)
+  data = ic.search_by_color_hist(color_hist)
+
+  #data = ic.search_by_image('../test/support/luna.jpg')
 
   #data = {'colors': colors, 'values': values}
   print("Sending: ", data)
