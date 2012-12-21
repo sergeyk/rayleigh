@@ -1,25 +1,16 @@
-"""
-The back-end of the multicolor image search.
-"""
-
-import os
 import cgi
 import cPickle
 import numpy as np
-import simplejson as json
-from skimage import img_as_float
-from skimage.io import imread, imsave, imshow
-from skimage.color import hsv2rgb, gray2rgb, rgb2lab, lab2rgb
-from sklearn.metrics import euclidean_distances
-from scipy.misc import imresize
 import pyflann
+import IPython.parallel as parallel
+from itertools import izip_longest
 
-from IPython import embed
+import rayleigh
 
 
 class ImageCollection(object):
     """
-    ImageCollection is the collection of images searchable by color.
+    ImageCollection: collection of images searchable by color.
 
     TODOS:
     - try rtree instead of flann
@@ -41,21 +32,20 @@ class ImageCollection(object):
         Save self to filename.
         """
         self.flann = None
-        cPickle.dump(self, open(filename,'w'), 2)
+        cPickle.dump(self, open(filename, 'w'), 2)
 
 
-    def __init__(self, hex_palette):
+    def __init__(self, palette):
         """
         Initalize an empty ImageCollection with a color palette, and set up the
         data structures.
 
         Args:
-          - hex_palette (list): [<hex color>, <hex color>, ...].
+          - palette (rayleigh.Palette)
         """
-        self.hex_palette = hex_palette
-        self.lab_palette = lab_palette(hex_palette)
+        self.palette = palette
         self.images = []
-        self.hists = np.zeros((0,len(self.hex_palette)))
+        self.hists = np.zeros((0, len(self.palette.hex_list)))
 
 
     def add_images(self, image_filenames):
@@ -66,13 +56,11 @@ class ImageCollection(object):
         Loading images:
         10000/10000 tasks finished after 1841 s
         """
-        from IPython.parallel import Client
-        rc = Client()
+        rc = parallel.Client()
         lview = rc.load_balanced_view()
 
-        from itertools import izip_longest
-        iterable = izip_longest(image_filenames, [], fillvalue=self.lab_palette)
-        iterated = [x for x in iterable] #  need to do this because of ipython
+        iterable = izip_longest(image_filenames, [], fillvalue=self.palette)
+        iterated = [x for x in iterable]  # need to do this because of ipython
         print("Loading images:")
         results = lview.map(process_image, iterated)
         results.wait_interactive()
@@ -87,21 +75,25 @@ class ImageCollection(object):
 
     def build_index(self):
         self.flann = pyflann.FLANN()
-        hists = self.hists / np.atleast_2d(self.hists.sum(axis=1)).T
-        self.params = self.flann.build_index(hists,
-            algorithm='kdtree',
-            trees=15)
+        self.params = self.flann.build_index(
+            self.hists,
+            algorithm='kdtree', trees=15)
         print(self.params)
 
 
     def search_by_image(self, image_filename, num=20):
         """
         Search images in database by color similarity to image.
+
+        Returns:
+            - query_img (dict): info about the query image
+
+            - results (list): list of dicts that were returned
         """
-        img = Image(image_filename)
-        color_hist = img.histogram_colors(self.lab_palette)
-        color_hist /= color_hist.sum()
-        return self.search_by_color_hist(color_hist, num)
+        img = rayleigh.Image(image_filename)
+        color_hist = img.histogram_colors(self.palette)
+        results = self.search_by_color_hist(color_hist, num)
+        return img.as_dict(), results
 
 
     def search_by_color_hist(self, color_hist, num=20):
@@ -109,7 +101,7 @@ class ImageCollection(object):
         Search images in database by color similarity to a color histogram.
         """
         result, dists = self.flann.nn_index(
-          color_hist, num, checks=self.params['checks'])
+            color_hist, num, checks=self.params['checks'])
         images = np.array(self.images)[result].squeeze().tolist()
         results = []
         for img, dist in zip(images, dists.squeeze()):
@@ -121,8 +113,8 @@ class ImageCollection(object):
 
 # For parallel execution, must be in module scope
 def process_image(args):
-    image_filename, lab_palette = args
-    img = Image(image_filename)
-    hist = img.histogram_colors(lab_palette)
+    image_filename, palette = args
+    img = rayleigh.Image(image_filename)
+    hist = img.histogram_colors(palette)
     img.discard_data()
     return img, hist

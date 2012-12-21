@@ -41,6 +41,12 @@ class Image(object):
         # convert to Lab color space and reshape
         self.lab_array = rgb2lab(img).reshape((h * w, d))
 
+    def as_dict(self):
+        """
+        Return relevant info about self in a dict.
+        """
+        return {'filename': self.filename,
+                'width': self.orig_width, 'height': self.orig_height}
 
     def discard_data(self):
         """
