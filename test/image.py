@@ -1,37 +1,34 @@
 """
 Test the image collection methods.
 """
-
 from context import *
-import matplotlib.pyplot as plt
 
 
 class TestImage(unittest.TestCase):
 
-    def test_image(self):
-        """
-        Test color functionality of the Image class.
-        """
-        def plot_palette_histogram(image_filename):
-            img = rayleigh.Image(os.path.join(support_dirname, image_filename))
+    def test_histogram(self):
+        # Create a palette and save it to file
+        num_hues = 7
+        sat_range = light_range = 2
+        palette = rayleigh.Palette(num_hues, sat_range, light_range)
+        dirname = skutil.makedirs(os.path.join(temp_dirname, 'image'))
+        palette.output(dirname)
+        palette_filename = os.path.join(dirname, 'palette.png')
+        assert(os.path.exists(palette_filename))
 
-            hex_palette = rayleigh.create_palette()
-            lab_palette = rayleigh.lab_palette(hex_palette)
-
-            img.quantize_to_palette(lab_palette)
-
-            # TODO: put into rayleigh module method!
-            lab_hist = img.histogram_colors(lab_palette)
-            plt.clf()
-            plt.bar(range(len(lab_hist)), lab_hist, color=hex_palette, edgecolor='black')
-            plt.savefig(image_filename+'_hist.png')
+        # Load the palette as an Image and
+        # - plot its histogram of its own palette
+        # - output quantized image
+        img = rayleigh.Image(palette_filename)
         
-        image_filenames = [
-            'lightgreen.png', 'palette.png', 'cool.jpg',
-            'landscape.jpg', 'luna.jpg', 'lion.jpg']
-        for image_filename in image_filenames:
-            plot_palette_histogram(image_filename)
+        sigma = 20
+        fname = palette_filename + '_hist_sigma_{}.png'.format(sigma)
+        img.histogram_colors(palette, sigma, fname)
+        assert(os.path.exists(fname))
 
+        fname = palette_filename + '_quant.png'
+        img.quantize_to_palette(palette, fname)
+        assert(os.path.exists(fname))
 
 if __name__ == '__main__':
     unittest.main()

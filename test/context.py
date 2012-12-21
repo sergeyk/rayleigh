@@ -8,10 +8,20 @@ temp_dirname = os.path.join(repo_dirname, 'test', '_temp')
 
 import simplejson as json
 import unittest
-from numpy.testing import *
 import numpy as np
+from numpy.testing import *
 from IPython import embed
 
 from skpyutils import skutil
 
 import rayleigh
+
+
+def save_synthetic_image(color, dirname, size=100):
+    """
+    Save a solid color image of the given hex color to the given directory.
+    """
+    filename = os.path.join(dirname, color + '.png')
+    cmd = "convert -size {size}x{size} 'xc:{color}' '{filename}'"
+    os.system(cmd.format(**locals()))
+    return filename

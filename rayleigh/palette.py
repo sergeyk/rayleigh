@@ -41,7 +41,7 @@ class Palette(object):
     of colors.
     """
 
-
+    
     def __init__(self, num_hues=13, sat_range=2, light_range=2):
         """
         Create a color palette (codebook) in the form of a 2D grid of colors.
@@ -62,7 +62,9 @@ class Palette(object):
             (Palette)
         """
         height = 1 + sat_range + light_range
-        hues = np.tile(np.linspace(0, 1, num_hues), (height, 1))
+        # generate num_hues+1 hues, but don't take the last one:
+        # hues are on a circle, and we would be oversampling the origin
+        hues = np.tile(np.linspace(0, 1, num_hues+1)[:-1], (height, 1))
 
         sats = np.hstack(
             (np.linspace(0.1, 0.6, sat_range), np.ones(1 + light_range)))
@@ -73,13 +75,20 @@ class Palette(object):
         lights = np.tile(np.atleast_2d(lights).T, (1, num_hues))
 
         colors = hsv2rgb(np.dstack((hues, sats, lights)))
-        gray = np.tile(np.atleast_3d(np.linspace(0, 1, num_hues)), (1, 1, 3))
+        grays = np.tile(np.atleast_3d(np.linspace(0, 1, num_hues)), (1, 1, 3))
 
-        self.rgb_image = np.vstack((colors, gray))
-        h, w, d = self.rgb_image.shape
-        self.rgb_array = self.rgb_image.reshape((w * h, d))
+        self.rgb_image = np.vstack((colors, grays))
+
+        # Make a nice histogram ordering of the hues and grays: order is dif
+        h, w, d = colors.shape
+        color_array = colors.T.reshape((d, w * h)).T
+        h, w, d = grays.shape
+        gray_array = grays.T.reshape((d, w * h)).T
+        
+        self.rgb_array = np.vstack((color_array, gray_array))
+        self.lab_array = rgb2lab(self.rgb_array[None, :, :]).squeeze()
         self.hex_list = [rgb2hex(row) for row in self.rgb_array]
-        self.lab_array = rgb2lab(self.rgb_image).reshape((w * h, d))
+        #assert(np.all(self.rgb_array == self.rgb_array[None, :, :].squeeze()))
 
 
     def output(self, dirname):
