@@ -8,6 +8,8 @@ from skpyutils import TicToc
 
 import rayleigh
 
+tt = TicToc()
+
 
 class ImageCollection(object):
     """
@@ -38,7 +40,7 @@ class ImageCollection(object):
         self.flann = flann
 
 
-    def __init__(self, palette):
+    def __init__(self, palette, distance_type='cs'):
         """
         Initalize an empty ImageCollection with a color palette, and set up the
         data structures.
@@ -50,6 +52,15 @@ class ImageCollection(object):
         self.images = []
         self.hists = np.zeros((0, len(self.palette.hex_list)))
         self.flann = None
+        self.distance_type = distance_type
+
+    def set_distance_type(self, distance_type='cs'):
+        """
+        Set the distance type used in the FLANN index.
+        """
+        if not self.distance_type == distance_type:
+            self.distance_type = distance_type
+            self.build_index(distance_type)
 
 
     def add_images(self, image_filenames):
@@ -88,11 +99,17 @@ class ImageCollection(object):
         """
         Build the FLANN index, with the default distance type of Chi-squared.
         """
+        print("ImageCollection: building index")
+        tt.tic('build_index')
         pyflann.set_distance_type(distance_type)
         self.flann = pyflann.FLANN()
+        # self.params = self.flann.build_index(
+        #     self.hists,
+        #     algorithm='kdtree', trees=1)
         self.params = self.flann.build_index(
             self.hists,
-            algorithm='kdtree', trees=5)
+            algorithm='kdtree')
+        tt.toc('build_index')
         print(self.params)
 
 

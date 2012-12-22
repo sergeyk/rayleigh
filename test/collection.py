@@ -76,27 +76,18 @@ class TestFlickrCollection(unittest.TestCase):
 
         # search several query images and output to html summary
         image_filenames_subset = shuffle(
-            image_filenames, random_state=0, n_samples=60)
+            image_filenames, random_state=0, n_samples=30)
 
         # Output results in several ways
-        # data = [ic.search_by_image(fname, mode='euclid_exact') for fname in image_filenames_subset]
-        # # data is a list of (query_img, results) tuples
-        # with open(os.path.join(dirname, 'matches_euclid_exact.html'), 'w') as f:
-        #     f.write(template.render(data=data))
-
-        # data = [ic.search_by_image(fname, mode='chi2_exact') for fname in image_filenames_subset]
-        # with open(os.path.join(dirname, 'matches_chi2_exact.html'), 'w') as f:
-        #     f.write(template.render(data=data))
-
-        # data = [ic.search_by_image(fname, mode='euclid_flann') for fname in image_filenames_subset]
-        # with open(os.path.join(dirname, 'matches_euclid_flann.html'), 'w') as f:
-        #     f.write(template.render(data=data))
-
-        data = [ic.search_by_image(fname, mode='chi2_flann') for fname in image_filenames_subset]
-        with open(os.path.join(dirname, 'matches_chi2_flann.html'), 'w') as f:
-            f.write(template.render(data=data))
-
-
+        modes = ['euclid_exact', 'euclid_flann', 'chi2_exact', 'chi2_flann']
+        for mode in modes:
+            tt.tic(mode)
+            data = [ic.search_by_image(fname, mode=mode) for fname in image_filenames_subset]
+            # data is a list of (query_img, results) tuples
+            filename = os.path.join(dirname, 'matches_{}.html'.format(mode))
+            with open(filename, 'w') as f:
+                f.write(template.render(time_elapsed=tt.qtoc(mode), data=data))
+            tt.toc(mode)
 
 
 if __name__ == '__main__':

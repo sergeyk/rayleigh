@@ -13,8 +13,11 @@ from numpy.testing import *
 from IPython import embed
 
 from skpyutils import skutil
+from skpyutils import TicToc
 
 import rayleigh
+
+tt = TicToc()
 
 
 def save_synthetic_image(color, dirname, size=100):
