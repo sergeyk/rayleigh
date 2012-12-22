@@ -4,6 +4,7 @@ import numpy as np
 import pyflann
 import IPython.parallel as parallel
 from itertools import izip_longest
+from skpyutils import TicToc
 
 import rayleigh
 
@@ -22,7 +23,6 @@ class ImageCollection(object):
         Load ImageCollection from filename.
         """
         ic = cPickle.load(open(filename))
-        ic.flann = None
         ic.build_index()
         return ic
 
@@ -30,9 +30,12 @@ class ImageCollection(object):
     def save(self, filename):
         """
         Save self to filename.
+        Exclude the built FLANN index because of some bug there. We'll rebuild.
         """
+        flann = self.flann
         self.flann = None
         cPickle.dump(self, open(filename, 'w'), 2)
+        self.flann = flann
 
 
     def __init__(self, palette):
@@ -46,6 +49,7 @@ class ImageCollection(object):
         self.palette = palette
         self.images = []
         self.hists = np.zeros((0, len(self.palette.hex_list)))
+        self.flann = None
 
 
     def add_images(self, image_filenames):
@@ -56,32 +60,43 @@ class ImageCollection(object):
         Loading images:
         10000/10000 tasks finished after 1841 s
         """
-        rc = parallel.Client()
-        lview = rc.load_balanced_view()
-
         iterable = izip_longest(image_filenames, [], fillvalue=self.palette)
         iterated = [x for x in iterable]  # need to do this because of ipython
-        print("Loading images:")
-        results = lview.map(process_image, iterated)
-        results.wait_interactive()
+        print("Loading images...")
+
+        try:
+            rc = parallel.Client()
+            lview = rc.load_balanced_view()
+            results = lview.map(process_image, iterated)
+            results.wait_interactive()
+        except:
+            print("WARNING: launch an ipython cluster to parallelize loading.")
+            tt = TicToc()
+            results = map(process_image, iterated)
+            print("Finished in %.3f s" % tt.qtoc())
+
         images, hists = zip(*results)
 
         self.images += images
         self.hists = np.vstack((self.hists, np.array(hists)))
         assert(len(self.images) == self.hists.shape[0])
 
-        self.build_index()
+        self.build_index(self.distance_type)
 
 
-    def build_index(self):
+    def build_index(self, distance_type='cs'):
+        """
+        Build the FLANN index, with the default distance type of Chi-squared.
+        """
+        pyflann.set_distance_type(distance_type)
         self.flann = pyflann.FLANN()
         self.params = self.flann.build_index(
             self.hists,
-            algorithm='kdtree', trees=15)
+            algorithm='kdtree', trees=5)
         print(self.params)
 
 
-    def search_by_image(self, image_filename, num=20):
+    def search_by_image(self, image_filename, num=20, mode='euclid_flann'):
         """
         Search images in database by color similarity to image.
 
@@ -92,14 +107,48 @@ class ImageCollection(object):
         """
         img = rayleigh.Image(image_filename)
         color_hist = img.histogram_colors(self.palette)
-        results = self.search_by_color_hist(color_hist, num)
+        if mode == 'euclid_flann':
+            results = self.search_by_color_hist_flann(color_hist, num, 'euclid')
+        elif mode == 'chi2_flann':
+            results = self.search_by_color_hist_flann(color_hist, num, 'chi2')
+        elif mode == 'euclid_exact':
+            results = self.search_by_color_hist_exact(color_hist, num, 'euclid')
+        elif mode == 'chi2_exact':
+            results = self.search_by_color_hist_exact(color_hist, num, 'chi2')
+        else:
+            raise Exception("Unsupported mode")
         return img.as_dict(), results
 
 
-    def search_by_color_hist(self, color_hist, num=20):
+    def search_by_color_hist_exact(self, color_hist, num=20, mode='chi2'):
+        if mode == 'euclid':
+            from sklearn.metrics import euclidean_distances
+            dists = euclidean_distances(
+                self.hists, color_hist, squared=True).flatten()
+        elif mode == 'chi2':
+            from sklearn.metrics.pairwise import chi2_kernel
+            dists = -chi2_kernel(self.hists, color_hist).flatten()
+        else:
+            raise Exception("Unsupported mode.")
+
+        ind = np.argsort(dists)
+        results = []
+        for i in ind[:num]:
+            dist = dists[i]
+            img = self.images[i]
+            results.append({
+                'width': img.orig_width, 'height': img.orig_height,
+                'filename': cgi.escape(img.filename), 'distance': dist})
+        return results
+
+
+    def search_by_color_hist_flann(self, color_hist, num=20, mode='euclid'):
         """
         Search images in database by color similarity to a color histogram.
         """
+        assert(self.flann is not None)
+
+
         result, dists = self.flann.nn_index(
             color_hist, num, checks=self.params['checks'])
         images = np.array(self.images)[result].squeeze().tolist()

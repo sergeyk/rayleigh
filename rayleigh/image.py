@@ -35,8 +35,14 @@ class Image(object):
             img = img[:, :, :3]
         h, w, d = tuple(img.shape)
         assert(d == 3)
-        self.h, self.w, self.d = h, w, d
         self.orig_height, self.orig_width, self.orig_depth = h, w, d
+
+        # downsample by 2 for speed
+        if h > 1 and w > 1:
+            img = img[::2, ::2, :]
+
+        h, w, d = tuple(img.shape)
+        self.h, self.w, self.d = tuple(img.shape)
 
         # convert to Lab color space and reshape
         self.lab_array = rgb2lab(img).reshape((h * w, d))
@@ -71,9 +77,8 @@ class Image(object):
         Returns:
             - hist (Kx, ndarray)
         """
-        assert(self.lab_array is not None)
         hist = util.smoothed_histogram(palette, self.lab_array, sigma)
-        if plot_filename:
+        if plot_filename is not None:
             fig = plt.figure(figsize=(10, 6), dpi=300)
             ax = fig.add_subplot(111)
             ax.bar(range(len(hist)), hist,

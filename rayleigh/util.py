@@ -17,7 +17,7 @@ def smoothed_histogram(palette, color_array, sigma=15):
             falloff. To see the effect:
 
     >>> from pylab import *
-    >>> ds = linspace(0,5000) # squared dsitance
+    >>> ds = linspace(0,5000) # squared distance
     >>> sigma=10; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
     >>> sigma=20; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
     >>> sigma=40; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
@@ -34,8 +34,9 @@ def smoothed_histogram(palette, color_array, sigma=15):
     # 100 loops, best of 3: 2.33 ms per loop
     dist = euclidean_distances(palette.lab_array, color_array, squared=True).T
     n = 2. * sigma ** 2
+    weights = dist
     weights = np.exp(-dist / n)
-    weights = np.maximum(weights, 1e-12)
+    weights = np.maximum(weights, 1e-6)
     # normalize by sum: if a color is equally well represented by several colors
     # it should not contribute much to the overall histogram
     normalized_weights = weights / weights.sum(1)[:, np.newaxis]

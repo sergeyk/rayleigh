@@ -6,13 +6,12 @@ from context import *
 from sklearn.utils import shuffle
 
 
-class TestCollection(unittest.TestCase):
+class TestSyntheticCollection(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.dirname = skutil.makedirs(os.path.join(temp_dirname, 'synthetic_colors'))
         cls.palette = rayleigh.Palette()
         cls.filenames = [save_synthetic_image(color, cls.dirname) for color in cls.palette.hex_list]
-
 
     def test_synthetic_creation(self):
         # save palette histograms and quantized versions
@@ -27,7 +26,6 @@ class TestCollection(unittest.TestCase):
 
             q_filename = filename + '_quant.png'
             img.quantize_to_palette(self.palette, q_filename)
-
 
     def test_synthetic_search(self):
         # set up jinja template
@@ -47,23 +45,59 @@ class TestCollection(unittest.TestCase):
             f.write(template.render(data=data))
 
 
+class TestFlickrCollection(unittest.TestCase):
     def test_flickr(self):
         """
         Load subset of MIRFLICKR 25K [dataset](http://press.liacs.nl/mirflickr/).
 
         > find /Volumes/WD\ Data/mirflickr -name "*.jpg" | head -n 100 > mirflickr_100.txt
         """
-        #image_list_filename = os.path.join(support_dirname, 'mirflickr_10000.txt')
-        #with open(image_list_filename) as f:
-        #    image_filenames = [x.strip() for x in f.readlines()]
+        dirname = skutil.makedirs(os.path.join(temp_dirname, 'mirflickr'))
+        image_list_filename = os.path.join(support_dirname, 'mirflickr_10000.txt')
+        with open(image_list_filename) as f:
+            image_filenames = [x.strip() for x in f.readlines()]
 
-        #hex_palette = rayleigh.create_palette()
-        
-        #ic = rayleigh.ImageCollection(hex_palette)
-        #ic.add_images(image_filenames)
+        # TODO: save in results/
+        ic_filename = '{}.pickle'.format(image_list_filename)
 
-        #results = ic.search_by_image(image_filenames[0])
-        #ic.save('%s.pickle'%image_list_filename)
+        if os.path.exists(ic_filename):
+            print("Loading ImageCollection from cache.")
+            ic = rayleigh.ImageCollection.load(ic_filename)
+        else:
+            palette = rayleigh.Palette()
+            ic = rayleigh.ImageCollection(palette)
+            ic.add_images(image_filenames)
+            ic.save(ic_filename)
+
+        # set up jinja template
+        from jinja2 import Environment, FileSystemLoader
+        env = Environment(loader=FileSystemLoader(support_dirname))
+        template = env.get_template('matches.html')
+
+        # search several query images and output to html summary
+        image_filenames_subset = shuffle(
+            image_filenames, random_state=0, n_samples=60)
+
+        # Output results in several ways
+        # data = [ic.search_by_image(fname, mode='euclid_exact') for fname in image_filenames_subset]
+        # # data is a list of (query_img, results) tuples
+        # with open(os.path.join(dirname, 'matches_euclid_exact.html'), 'w') as f:
+        #     f.write(template.render(data=data))
+
+        # data = [ic.search_by_image(fname, mode='chi2_exact') for fname in image_filenames_subset]
+        # with open(os.path.join(dirname, 'matches_chi2_exact.html'), 'w') as f:
+        #     f.write(template.render(data=data))
+
+        # data = [ic.search_by_image(fname, mode='euclid_flann') for fname in image_filenames_subset]
+        # with open(os.path.join(dirname, 'matches_euclid_flann.html'), 'w') as f:
+        #     f.write(template.render(data=data))
+
+        data = [ic.search_by_image(fname, mode='chi2_flann') for fname in image_filenames_subset]
+        with open(os.path.join(dirname, 'matches_chi2_flann.html'), 'w') as f:
+            f.write(template.render(data=data))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
