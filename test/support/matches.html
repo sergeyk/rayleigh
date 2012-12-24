@@ -2,12 +2,11 @@
 <html>
 <head>
   <title>Rayleigh: Search by multiple colors</title>
-  <link href="../../../client/static/css/main.css" media="all" rel="stylesheet" type="text/css"/>
   <style>
     body {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 14px;
-      line-height: 1.4em;
+      font-size: 11px;
+      line-height: 1.2em;
       background: #f5f5f5;
       color: #333333;
     }
@@ -15,26 +14,26 @@
       display: inline-block;
       vertical-align: top;
     }
+    div.results_block {
+      display: block;
+    }
     div.query_image {
       padding-right: 20px;
       border-right: 1px dashed gray;
     }
-    div.results_block {
-      display: block;
-    }
   </style>
 </head>
 <body>
-<p>Finished in {{ time_elapsed }}.</p>
+<p>Finished {{ num_queries }} in {{ '%.3f s'|format(time_elapsed) }} at {{ '%.3f ms/img' | format(1000 * time_elapsed / num_queries) }}.</p>
 {% for query_image, results in data %}
   <div id="results_block">
     <div class="query_image">
-      <img src="{{ query_image['filename'] }}" width="{{ query_image['width'] / 2 }}" height="{{ query_image['height'] / 2 }}" />
+      <img src="{{ query_image['filename'] }}" width="{{ '%d' | format(query_image['width'] / 4) }}" height="{{ '%d' | format(query_image['height'] / 4) }}" />
     </div>
     <div class="query_results">
     {% for result in results %}
       <div class="query_result">
-        <img src="{{ result['filename'] }}" width="{{ result['width'] / 2 }}" height="{{ result['height'] / 2 }}" />
+        <img src="{{ result['filename'] }}" width="{{ '%d' | format(result['width'] / 4) }}" height="{{ '%d' | format(result['height'] / 4) }}" />
         <br />
         <span>{{ '%.3f'|format(result['distance']) }}</span>
       </div>

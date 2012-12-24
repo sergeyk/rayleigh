@@ -4,6 +4,7 @@ Test the image collection methods.
 from context import *
 
 from sklearn.utils import shuffle
+from rayleigh import *
 
 
 class TestSyntheticCollection(unittest.TestCase):
@@ -50,70 +51,96 @@ class TestFlickrCollection(unittest.TestCase):
     def test_flickr(self):
         """
         Load subset of MIRFLICKR 25K [dataset](http://press.liacs.nl/mirflickr/).
-
         > find /Volumes/WD\ Data/mirflickr -name "*.jpg" | head -n 100 > mirflickr_100.txt
         """
-            
-        # set up jinja template
-        from jinja2 import Environment, FileSystemLoader
-        env = Environment(loader=FileSystemLoader(support_dirname))
-        template = env.get_template('matches.html')
-
-        dirname = skutil.makedirs(os.path.join(temp_dirname, 'mirflickr'))
-        image_list_filename = os.path.join(support_dirname, 'mirflickr_25K.txt')
-        with open(image_list_filename) as f:
-            image_filenames = [x.strip() for x in f.readlines()]
-
+        # Parametrization of our test.
+        image_list_name = 'mirflickr_100'
+        image_list_name = 'mirflickr_1K'
+        image_list_name = 'mirflickr_25K'
+        dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
+        num_queries = 100
         palette = rayleigh.Palette(num_hues=8, sat_range=2, light_range=2)
         palette.output(dirname=dirname)
 
-        def load_ic():
-            ic_filename = os.path.join(
-                dirname, '{}.pickle'.format(image_list_filename))
+        # Set up jinja template.
+        from jinja2 import Environment, FileSystemLoader
+        env = Environment(loader=FileSystemLoader(support_dirname))
+        template = env.get_template('matches.html')
+        
+        # Construct the list of images in the dataset.
+        image_list_filename = os.path.join(
+            support_dirname, image_list_name + '.txt')
+        with open(image_list_filename) as f:
+            image_filenames = [x.strip() for x in f.readlines()]
 
-            if os.path.exists(ic_filename):
-                print("Loading ImageCollection from cache.")
-                ic = rayleigh.ImageCollection.load(ic_filename)
+        # Load the image collection.
+        ic_filename = os.path.join(
+            temp_dirname, '{}.pickle'.format(image_list_name))
+
+        if os.path.exists(ic_filename):
+            print("Loading ImageCollection from cache.")
+            ic = rayleigh.ImageCollection.load(ic_filename)
+        else:
+            ic = rayleigh.ImageCollection(palette)
+            ic.add_images(image_filenames)
+            ic.save(ic_filename)
+
+        # Make several searchable collections.
+        def create_or_load_sic(algorithm, distance_metric, num_dimensions):
+            if algorithm == 'exact':
+                sic_class = SearchableImageCollectionExact
+            elif algorithm == 'flann':
+                sic_class = SearchableImageCollectionFLANN
+            elif algorithm == 'ckdtree':
+                sic_class = SearchableImageCollectionCKDTree
             else:
-                ic = rayleigh.ImageCollection(palette)
-                ic.add_images(image_filenames)
-                ic.save(ic_filename)
-            return ic
+                raise Exception("Unknown algorithm.")
 
-        ic = load_ic()
-        sics = {
-            'euclidean_exact': rayleigh.SearchableImageCollectionExact(ic, 'euclidean'),
-            'euclidean_flann': rayleigh.SearchableImageCollectionFLANN(ic, 'euclidean'),
-            'euclidean_ckd': rayleigh.SearchableImageCollectionCKDTree(ic, 'euclidean'),
-            'manhattan_exact': rayleigh.SearchableImageCollectionExact(ic, 'manhattan'),
-            'manhattan_flann': rayleigh.SearchableImageCollectionFLANN(ic, 'manhattan'),
-            'manhattan_ckd': rayleigh.SearchableImageCollectionCKDTree(ic, 'manhattan')
-        }
+            filename = os.path.join(dirname, '{}_{}_{}_{}.pickle'.format(
+                image_list_name, algorithm, distance_metric, num_dimensions))
+
+            if os.path.exists(filename):
+                sic = sic_class.load(filename)
+            else:
+                sic = sic_class(ic, distance_metric, num_dimensions)
+                sic.save(filename)
+
+            return sic
+
+        # there are 48 dimensions in our palette.
+        modes = [
+            ('exact', 'euclidean', 12), ('exact', 'manhattan', 12),
+            ('exact', 'euclidean', 24), ('exact', 'manhattan', 24),
+            ('exact', 'euclidean', 0),  ('exact', 'manhattan', 0),
+
+            ('flann', 'euclidean', 12), ('flann', 'manhattan', 12),
+            ('flann', 'euclidean', 24), ('flann', 'manhattan', 24),
+            ('flann', 'euclidean', 0),  ('flann', 'manhattan', 0),
+            ('flann', 'chi_square', 0),
+
+            ('ckdtree', 'euclidean', 24), ('ckdtree', 'manhattan', 24)]
+        mode_sics = {}
+
+        for mode in modes:
+            mode_sics[mode] = create_or_load_sic(*mode)
 
         # search several query images and output to html summary
         np.random.seed(0)
-        image_inds = np.random.permutation(range(len(image_filenames)))[:200]
+        image_inds = np.random.permutation(range(len(image_filenames)))
+        image_inds = image_inds[:num_queries]
 
         time_elapsed = {}
-        for mode, sic in sics.iteritems():
+        for mode in modes:
             tt.tic(mode)
-            #data = [sic.search_by_image(image_filenames[ind]) for ind in image_inds]
-            data = [sic.search_by_image_in_dataset(ind) for ind in image_inds]
+            data = [mode_sics[mode].search_by_image_in_dataset(ind) for ind in image_inds]
             time_elapsed[mode] = tt.qtoc(mode)
-            # data is a list of (query_img, results) tuples
-            filename = os.path.join(dirname, 'matches_{}.html'.format(mode))
+            print("Time elapsed for %s: %.3f s" % (mode, time_elapsed[mode]))
+
+            filename = os.path.join(dirname, 'matches_{}_{}_{}.html'.format(*mode))
             with open(filename, 'w') as f:
                 f.write(template.render(
-                    time_elapsed=time_elapsed[mode], data=data))
-            print("Time elapsed for %s: %.3f s" % (mode, time_elapsed[mode]))
-        
-        for mode in ['euclidean_flann', 'euclidean_ckd']:
-            speedup = time_elapsed['euclidean_exact'] / time_elapsed[mode]
-            print("{}: speedup of {:.3f} over {}".format(mode, speedup, 'manhattan_exact'))
-
-        for mode in ['manhattan_flann', 'manhattan_ckd']:
-            speedup = time_elapsed[mode] / time_elapsed['manhattan_exact']
-            print("{}: speedup of {:.3f} over {}".format(mode, speedup, 'manhattan_exact'))
-
+                    num_queries=num_queries, time_elapsed=time_elapsed[mode],
+                    data=data))
+    
 if __name__ == '__main__':
     unittest.main()
