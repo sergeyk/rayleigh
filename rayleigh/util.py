@@ -34,11 +34,14 @@ def smoothed_histogram(palette, color_array, sigma=15):
     # 100 loops, best of 3: 2.33 ms per loop
     dist = euclidean_distances(palette.lab_array, color_array, squared=True).T
     n = 2. * sigma ** 2
-    weights = dist
     weights = np.exp(-dist / n)
-    weights = np.maximum(weights, 1e-6)
     # normalize by sum: if a color is equally well represented by several colors
     # it should not contribute much to the overall histogram
-    normalized_weights = weights / weights.sum(1)[:, np.newaxis]
+    normalizing = weights.sum(1)
+
+    # TODO: optimize for speed here
+    normalizing[normalizing == 0] = 1e-12
+    normalized_weights = weights / normalizing[:, np.newaxis]
     hist = normalized_weights.sum(0) / color_array.shape[0]
+    hist[hist < 1e-4] = 0
     return hist

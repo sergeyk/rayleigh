@@ -42,7 +42,7 @@ class Palette(object):
     """
 
     
-    def __init__(self, num_hues=13, sat_range=2, light_range=2):
+    def __init__(self, num_hues=8, sat_range=2, light_range=2):
         """
         Create a color palette (codebook) in the form of a 2D grid of colors.
 
@@ -64,14 +64,17 @@ class Palette(object):
         height = 1 + sat_range + light_range
         # generate num_hues+1 hues, but don't take the last one:
         # hues are on a circle, and we would be oversampling the origin
-        hues = np.tile(np.linspace(0, 1, num_hues+1)[:-1], (height, 1))
+        hues = np.tile(np.linspace(0, 1, num_hues + 1)[:-1], (height, 1))
+        if num_hues == 8:
+            hues = np.tile(np.array(
+                [0.,  0.10,  0.18,  0.35, 0.46, 0.60, 0.75,  0.85]), (height, 1))
 
         sats = np.hstack(
-            (np.linspace(0.1, 0.6, sat_range), np.ones(1 + light_range)))
+            (np.linspace(0, 1, sat_range + 2)[1:-1], np.ones(1 + light_range)))
         sats = np.tile(np.atleast_2d(sats).T, (1, num_hues))
 
         lights = np.hstack(
-            (np.ones(1 + sat_range), np.linspace(.8, 0.3, light_range)))
+            (np.ones(1 + sat_range), np.linspace(1, 0, light_range + 2)[1:-1]))
         lights = np.tile(np.atleast_2d(lights).T, (1, num_hues))
 
         colors = hsv2rgb(np.dstack((hues, sats, lights)))

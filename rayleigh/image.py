@@ -16,6 +16,8 @@ class Image(object):
     image resizing method that I'm able to find converts images to 8 bits.
     """
 
+    MAX_DIMENSION = 200
+
     def __init__(self, image_filename):
         """
         Read the image at the URL in RGB format, downsample if needed,
@@ -37,9 +39,11 @@ class Image(object):
         assert(d == 3)
         self.orig_height, self.orig_width, self.orig_depth = h, w, d
 
-        # downsample by 2 for speed
-        if h > 1 and w > 1:
-            img = img[::2, ::2, :]
+        # downsample for speed
+        # >>> def d(dim, max_dim): return arange(0,dim,dim/max_dim+1).shape
+        # >>> plot(range(1200), [d(x, 200) for x in range(1200)])
+        stride = min(h, w) / self.MAX_DIMENSION + 1
+        img = img[::stride, ::stride, :]
 
         h, w, d = tuple(img.shape)
         self.h, self.w, self.d = tuple(img.shape)
@@ -85,6 +89,7 @@ class Image(object):
                    color=palette.hex_list, edgecolor='black')
             ax.set_ylim((0, 1))
             ax.xaxis.set_ticks([])
+            ax.set_xlim((0, len(palette.hex_list)))
             fig.savefig(plot_filename, dpi=300, facecolor='none')
         return hist
 
