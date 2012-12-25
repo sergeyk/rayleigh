@@ -17,7 +17,7 @@ class TestSyntheticCollection(unittest.TestCase):
     def test_synthetic_creation(self):
         # save palette histograms and quantized versions
         sigma = 20
-        n_samples = len(self.filenames) / 5
+        n_samples = len(self.filenames) / 3
         s_filenames = shuffle(self.filenames, random_state=0, n_samples=n_samples)
         for filename in s_filenames:
             img = rayleigh.Image(filename)
@@ -37,7 +37,7 @@ class TestSyntheticCollection(unittest.TestCase):
         # create a collection and output nearest matches to every color
         ic = rayleigh.ImageCollection(self.palette)
         ic.add_images(self.filenames)
-        sic = rayleigh.SearchableImageCollectionExact(ic, 'euclidean')
+        sic = rayleigh.SearchableImageCollectionExact(ic, 'euclidean', 0)
 
         # search several query images and output to html summary
         matches_filename = os.path.join(self.dirname, 'matches.html')
@@ -58,7 +58,7 @@ class TestFlickrCollection(unittest.TestCase):
         image_list_name = 'mirflickr_1K'
         image_list_name = 'mirflickr_25K'
         dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
-        num_queries = 100
+        num_queries = 50
         palette = rayleigh.Palette(num_hues=8, sat_range=2, light_range=2)
         palette.output(dirname=dirname)
 
@@ -107,11 +107,12 @@ class TestFlickrCollection(unittest.TestCase):
 
             return sic
 
-        # there are 48 dimensions in our palette.
+        # there are 45 dimensions in our palette.
         modes = [
             ('exact', 'euclidean', 12), ('exact', 'manhattan', 12),
             ('exact', 'euclidean', 24), ('exact', 'manhattan', 24),
             ('exact', 'euclidean', 0),  ('exact', 'manhattan', 0),
+            ('exact', 'chi_square', 0),
 
             ('flann', 'euclidean', 12), ('flann', 'manhattan', 12),
             ('flann', 'euclidean', 24), ('flann', 'manhattan', 24),

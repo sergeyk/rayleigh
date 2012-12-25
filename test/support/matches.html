@@ -24,7 +24,9 @@
   </style>
 </head>
 <body>
-<p>Finished {{ num_queries }} in {{ '%.3f s'|format(time_elapsed) }} at {{ '%.3f ms/img' | format(1000 * time_elapsed / num_queries) }}.</p>
+{% if num_queries %}
+  <p>Finished {{ num_queries }} in {{ '%.3f s'|format(time_elapsed) }} at {{ '%.3f ms/img' | format(1000 * time_elapsed / num_queries) }}.</p>
+{% endif %}
 {% for query_image, results in data %}
   <div id="results_block">
     <div class="query_image">

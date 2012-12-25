@@ -109,7 +109,8 @@ class SearchableImageCollection(object):
             img = self.ic.images[ind]
             results.append({
                 'width': img.orig_width, 'height': img.orig_height,
-                'filename': cgi.escape(img.filename), 'distance': dist})
+                'filename': cgi.escape(img.filename), 'distance': dist,
+                'ind': int(ind)})
         return results
 
     @abc.abstractmethod
@@ -138,7 +139,7 @@ class SearchableImageCollectionExact(SearchableImageCollection):
     Search the image collection exhaustively (mainly through np.dot).
     """
 
-    DISTANCE_METRICS = ['manhattan', 'euclidean']
+    DISTANCE_METRICS = ['manhattan', 'euclidean', 'chi_square']
 
     def nn_ind(self, color_hist, num):
         """

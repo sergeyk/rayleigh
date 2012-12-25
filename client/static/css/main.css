@@ -44,21 +44,30 @@ body {
 
 #images {
   float: left;
-  width: 1000px;
+  width: 1200px;
 }
 
 #images img {
-  margin: 7px;
+  margin: 3px;
+}
+
+div.result {
+  display: inline-block;
+}
+.result a {
+  padding-top: -3px;
+  font-size: 9px;
+  text-decoration: none;
 }
 
 #colors {
   float: left;
-  width: 300px;
+  width: 200px;
 }
 
 #colors a {
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
   display: inline-block;
   border: 0px solid gray;
   margin: 0px;

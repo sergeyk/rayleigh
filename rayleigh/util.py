@@ -1,9 +1,76 @@
+import os
 import numpy as np
+import matplotlib.pyplot as plt
+import tempfile
 from sklearn.metrics import euclidean_distances
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import StringIO
+
+
+def rgb2hex(rgb):
+    """
+    Convert a sequence of three [0,1] RGB colors to a hex string.
+    """
+    return '#%02x%02x%02x' % tuple([np.round(val * 255) for val in rgb[:3]])
+
+
+def hex2rgb(hexcolor_str):
+    """
+    Convert string containing an HTML-encoded color to an RGB tuple.
+
+    >>> hex2rgb('#ffffff')
+    (255, 255, 255)
+    >>> hex2rgb('33cc00')
+    (51, 204, 0)
+    """
+    hexcolor = int(hexcolor_str.strip('#'), 16)
+    r = (hexcolor >> 16) & 0xff
+    g = (hexcolor >> 8) & 0xff
+    b = hexcolor & 0xff
+    return (r, g, b)
+
+
+def plot_histogram(hist, palette):
+    """
+    TODO
+    """
+    fig = plt.figure(figsize=(5, 3), dpi=300)
+    ax = fig.add_subplot(111)
+    ax.bar(range(len(hist)), hist,
+           color=palette.hex_list, edgecolor='black')
+    ax.set_ylim((0, 1))
+    ax.xaxis.set_ticks([])
+    ax.set_xlim((0, len(palette.hex_list)))
+    return fig
+
+
+def plot_histogram_html(hist, palette, as_html=False):
+    """
+    TODO
+    """
+    _, tfname = tempfile.mkstemp('.png')
+    fig = plot_histogram(hist, palette)
+    fig.savefig(tfname, dpi=150, facecolor='none')
+    data_uri = open(tfname, 'rb').read().encode('base64').replace('\n', '')
+    os.remove(tfname)
+    if as_html:
+        return '<img width="300px" src="data:image/png;base64,{0}">'.format(data_uri)
+    return data_uri
+
+
+def plot_histogram_flask(hist, palette):
+    """
+    TODO
+    """
+    fig = plot_histogram(hist, palette)
+    canvas = FigureCanvas(fig)
+    png_output = StringIO.StringIO()
+    canvas.print_png(png_output)
+    return png_output
 
 
 def smoothed_histogram(palette, color_array, sigma=15):
-    """"
+    """
     Assign colors in the image to nearby colors in the palette, weighted by
     distance in Lab color space.
 

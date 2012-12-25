@@ -7,29 +7,7 @@ import simplejson as json
 import numpy as np
 from skimage.color import hsv2rgb, rgb2lab
 from skimage.io import imsave
-
-
-def rgb2hex(rgb):
-    """
-    Convert a sequence of three [0,1] RGB colors to a hex string.
-    """
-    return '#%02x%02x%02x' % tuple([np.round(val * 255) for val in rgb[:3]])
-
-
-def hex2rgb(hexcolor_str):
-    """
-    Convert string containing an HTML-encoded color to an RGB tuple.
-
-    >>> hex2rgb('#ffffff')
-    (255, 255, 255)
-    >>> hex2rgb('33cc00')
-    (51, 204, 0)
-    """
-    hexcolor = int(hexcolor_str.strip('#'), 16)
-    r = (hexcolor >> 16) & 0xff
-    g = (hexcolor >> 8) & 0xff
-    b = hexcolor & 0xff
-    return (r, g, b)
+from rayleigh.util import rgb2hex
 
 
 class Palette(object):
@@ -41,7 +19,6 @@ class Palette(object):
     of colors.
     """
 
-    
     def __init__(self, num_hues=8, sat_range=2, light_range=2):
         """
         Create a color palette (codebook) in the form of a 2D grid of colors.
@@ -67,7 +44,7 @@ class Palette(object):
         hues = np.tile(np.linspace(0, 1, num_hues + 1)[:-1], (height, 1))
         if num_hues == 8:
             hues = np.tile(np.array(
-                [0.,  0.10,  0.18,  0.35, 0.46, 0.60, 0.75,  0.85]), (height, 1))
+                [0.,  0.10,  0.15,  0.28, 0.51, 0.58, 0.77,  0.85]), (height, 1))
 
         sats = np.hstack(
             (np.linspace(0, 1, sat_range + 2)[1:-1], np.ones(1 + light_range)))
@@ -78,11 +55,12 @@ class Palette(object):
         lights = np.tile(np.atleast_2d(lights).T, (1, num_hues))
 
         colors = hsv2rgb(np.dstack((hues, sats, lights)))
-        grays = np.tile(np.atleast_3d(np.linspace(0, 1, num_hues)), (1, 1, 3))
+        grays = np.tile(
+            np.linspace(1, 0, height)[:, np.newaxis, np.newaxis], (1, 1, 3))
 
-        self.rgb_image = np.vstack((colors, grays))
+        self.rgb_image = np.hstack((colors, grays))
 
-        # Make a nice histogram ordering of the hues and grays: order is dif
+        # Make a nice histogram ordering of the hues and grays
         h, w, d = colors.shape
         color_array = colors.T.reshape((d, w * h)).T
         h, w, d = grays.shape
@@ -92,7 +70,6 @@ class Palette(object):
         self.lab_array = rgb2lab(self.rgb_array[None, :, :]).squeeze()
         self.hex_list = [rgb2hex(row) for row in self.rgb_array]
         #assert(np.all(self.rgb_array == self.rgb_array[None, :, :].squeeze()))
-
 
     def output(self, dirname):
         """
