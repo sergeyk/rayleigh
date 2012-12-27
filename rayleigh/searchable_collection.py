@@ -54,7 +54,7 @@ class SearchableImageCollection(object):
         if self.distance_metric not in self.DISTANCE_METRICS:
             raise Exception("Unsupported distance metric.")
         self.num_dimensions = num_dimensions
-        self.hists_reduced = self.ic.hists
+        self.hists_reduced = self.ic.hists.copy()
         self.sigma = sigma
         if self.sigma > 0:
             self.smooth_histograms()
@@ -76,8 +76,8 @@ class SearchableImageCollection(object):
         """
         tt.tic('reduce_dimensionality')
         self.pca = PCA(n_components=self.num_dimensions, whiten=True)
-        self.pca.fit(self.ic.hists)
-        self.hists_reduced = self.pca.transform(self.ic.hists)
+        self.pca.fit(self.hists_reduced)
+        self.hists_reduced = self.pca.transform(self.hists_reduced)
         tt.toc('reduce_dimensionality')
 
     def search_by_image_in_dataset(self, img_ind, num=20):
@@ -88,8 +88,9 @@ class SearchableImageCollection(object):
         See search_by_color_hist().
         """
         query_img = self.ic.images[img_ind]
-        color_hist = self.ic.hists[img_ind, :]
-        return query_img.as_dict(), self.search_by_color_hist(color_hist)
+        color_hist = self.hists_reduced[img_ind, :]
+        results = self.search_by_color_hist(color_hist, transform=False)
+        return query_img.as_dict(), results
 
     def search_by_image(self, image_filename, num=20):
         """
@@ -98,10 +99,11 @@ class SearchableImageCollection(object):
         See search_by_color_hist().
         """
         query_img = Image(image_filename)
-        color_hist = query_img.histogram_colors(self.ic.palette)
+        color_hist = query_img.histogram_colors_smoothed(
+            self.ic.palette, sigma=self.sigma, direct=False)
         return query_img.as_dict(), self.search_by_color_hist(color_hist)
 
-    def search_by_color_hist(self, color_hist, num=20):
+    def search_by_color_hist(self, color_hist, num=20, transform=True):
         """
         Search images in database by color similarity to the given histogram.
 
@@ -110,12 +112,15 @@ class SearchableImageCollection(object):
 
             - num (int): number of nearest neighbors to return.
 
+            - transform (bool) [True]:
+                Reduce the dimensionality of the query histogram?
+
         Returns:
             - query_img (dict): info about the query image
 
             - results (list): list of dicts of nearest neighbors to query
         """
-        if self.num_dimensions > 0:
+        if transform and self.num_dimensions > 0:
             color_hist = self.pca.transform(color_hist)
         nn_ind, nn_dists = self.nn_ind(color_hist, num)
         results = []
@@ -198,9 +203,9 @@ class SearchableImageCollectionFLANN(SearchableImageCollection):
         flann.save_index(filename + '_flann_index')
         self.flann = flann
 
-    def __init__(self, image_collection, distance_metric, dimensions):
+    def __init__(self, image_collection, distance_metric, sigma, dimensions):
         super(SearchableImageCollectionFLANN, self).__init__(
-            image_collection, distance_metric, dimensions)
+            image_collection, distance_metric, sigma, dimensions)
         self.build_index()
 
     def build_index(self, index_filename=None):
@@ -247,9 +252,9 @@ class SearchableImageCollectionCKDTree(SearchableImageCollection):
     def load(filename):
         return cPickle.load(open(filename)).build_index()
 
-    def __init__(self, image_collection, distance_metric, dimensions):
+    def __init__(self, image_collection, distance_metric, sigma, dimensions):
         super(SearchableImageCollectionCKDTree, self).__init__(
-            image_collection, distance_metric, dimensions)
+            image_collection, distance_metric, sigma, dimensions)
         self.build_index()
 
     def build_index(self):

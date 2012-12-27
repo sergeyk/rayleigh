@@ -55,6 +55,7 @@ class ImageCollection(object):
         jobs = [(url, self.palette) for url in image_urls]
 
         print("Loading images...")
+        tt = TicToc()
         try:
             rc = parallel.Client()
             lview = rc.load_balanced_view()
@@ -62,9 +63,8 @@ class ImageCollection(object):
             results.wait_interactive()
         except:
             print("WARNING: launch an ipython cluster to parallelize loading.")
-            tt = TicToc()
             results = map(process_image, jobs)
-            print("Finished in %.3f s" % tt.qtoc())
+        print("Finished in %.3f s" % tt.qtoc())
 
         images, hists = zip(*results)
         self.images += images

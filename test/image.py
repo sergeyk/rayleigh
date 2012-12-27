@@ -36,7 +36,7 @@ class TestImage(unittest.TestCase):
 
     def test_flickr(self):
         dirname = skutil.makedirs(os.path.join(temp_dirname, 'image_flickr'))
-        palette = rayleigh.Palette(num_hues=11, light_range=3, sat_range=2)
+        palette = rayleigh.Palette(num_hues=10, light_range=3, sat_range=2)
         palette.output(dirname)
 
 

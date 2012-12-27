@@ -39,13 +39,19 @@ class Palette(object):
         Returns:
             (Palette)
         """
-        height = 1 + sat_range + (2 * light_range - 2)
+        height = 1 + sat_range + (2 * light_range - 1)
         # generate num_hues+1 hues, but don't take the last one:
         # hues are on a circle, and we would be oversampling the origin
         hues = np.tile(np.linspace(0, 1, num_hues + 1)[:-1], (height, 1))
         if num_hues == 8:
             hues = np.tile(np.array(
                 [0.,  0.10,  0.15,  0.28, 0.51, 0.58, 0.77,  0.85]), (height, 1))
+        if num_hues == 9:
+            hues = np.tile(np.array(
+                [0.,  0.10,  0.15,  0.28, 0.49, 0.54, 0.60, 0.7, 0.87]), (height, 1))
+        if num_hues == 10:
+            hues = np.tile(np.array(
+                [0.,  0.10,  0.15,  0.28, 0.49, 0.54, 0.60, 0.66, 0.76, 0.87]), (height, 1))
         elif num_hues == 11:
             hues = np.tile(np.array(
                 [0.0, 0.0833, 0.166, 0.25,
@@ -56,14 +62,14 @@ class Palette(object):
         sats = np.hstack((
             np.linspace(0, 1, sat_range + 2)[1:-1],
             1,
-            [1] * (light_range - 1),
-            [.3] * (light_range - 1),
+            [1] * (light_range),
+            [.4] * (light_range - 1),
         ))
         lights = np.hstack((
             [1] * sat_range,
             1,
-            np.linspace(1, 0, light_range + 2)[1:-2],
-            np.linspace(1, 0, light_range + 2)[1:-2],
+            np.linspace(1, 0.2, light_range + 2)[1:-1],
+            np.linspace(1, 0.2, light_range + 2)[1:-2],
         ))
 
         sats = np.tile(np.atleast_2d(sats).T, (1, num_hues))

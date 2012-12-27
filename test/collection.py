@@ -59,7 +59,7 @@ class TestFlickrCollection(unittest.TestCase):
         image_list_name = 'mirflickr_25K'
         dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
         num_queries = 50
-        palette = rayleigh.Palette(num_hues=11, sat_range=3, light_range=2)
+        palette = rayleigh.Palette(num_hues=10, light_range=3, sat_range=2)
         palette.output(dirname=dirname)
 
         # Set up jinja template.
@@ -112,20 +112,29 @@ class TestFlickrCollection(unittest.TestCase):
         image_inds = np.random.permutation(range(len(image_filenames)))
         image_inds = image_inds[:num_queries]
 
-        # there are ~200 dimensions in our palette.
+        # there are 88 dimensions in our palette.
         modes = [
-            ('exact', 'euclidean', 10, 50), ('exact', 'manhattan', 10, 50),
-            ('exact', 'euclidean', 10, 0),  ('exact', 'manhattan', 10, 0),
-            ('exact', 'chi_square', 10, 0), ('exact', 'chi_square', 20, 0),
-            ('exact', 'chi_square', 30, 0), ('exact', 'euclidean', 20, 0),
+            ('exact', 'euclidean', 8, 22),
+            ('exact', 'euclidean', 8, 0),
+            ('exact', 'euclidean', 16, 0),
 
-            ('flann', 'euclidean', 10, 50), ('flann', 'manhattan', 10, 50),
-            ('flann', 'euclidean', 10, 0),  ('flann', 'manhattan', 10, 0),
-            ('flann', 'chi_square', 10, 0),
-            ('flann', 'euclidean', 20, 0),  ('flann', 'manhattan', 20, 0),
-            ('flann', 'chi_square', 20, 0),
+            ('exact', 'manhattan', 8, 22),
+            ('exact', 'manhattan', 8, 0),
+            ('exact', 'manhattan', 16, 0),
 
-            ('ckdtree', 'euclidean', 10, 30), ('ckdtree', 'manhattan', 10, 30)
+            ('exact', 'chi_square', 8, 0),
+            ('exact', 'chi_square', 16, 0),
+
+            ('flann', 'euclidean', 8, 22),
+            #('flann', 'euclidean', 8, 0),
+
+            #('flann', 'manhattan', 8, 22),
+            #('flann', 'manhattan', 8, 0),
+
+            ('flann', 'chi_square', 8, 0),
+            
+            #('ckdtree', 'euclidean', 8, 22),
+            #('ckdtree', 'manhattan', 8, 22)
         ]
 
         time_elapsed = {}
