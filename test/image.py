@@ -2,6 +2,8 @@
 Test the image collection methods.
 """
 from context import *
+import shutil
+from glob import glob
 
 
 class TestImage(unittest.TestCase):
@@ -16,19 +18,55 @@ class TestImage(unittest.TestCase):
         palette_filename = os.path.join(dirname, 'palette.png')
         assert(os.path.exists(palette_filename))
 
-        # Load the palette as an Image and
-        # - plot its histogram of its own palette
-        # - output quantized image
         img = rayleigh.Image(palette_filename)
-        
+
+        # Output unsmoothed histogram
+        img.histogram_colors(palette, palette_filename + '_hist.png')
+
+        # Test smoothed histogram
         sigma = 20
+        fname = palette_filename + '_hist_direct_sigma_{}.png'.format(sigma)
+        img.histogram_colors_smoothed(palette, sigma, fname, direct=True)
         fname = palette_filename + '_hist_sigma_{}.png'.format(sigma)
-        img.histogram_colors(palette, sigma, fname)
-        assert(os.path.exists(fname))
+        img.histogram_colors_smoothed(palette, sigma, fname, direct=False)
 
         fname = palette_filename + '_quant.png'
-        img.quantize_to_palette(palette, fname)
+        img.output_quantized_to_palette(palette, fname)
         assert(os.path.exists(fname))
+
+    def test_flickr(self):
+        dirname = skutil.makedirs(os.path.join(temp_dirname, 'image_flickr'))
+        palette = rayleigh.Palette(num_hues=11, light_range=3, sat_range=2)
+        palette.output(dirname)
+
+
+        image_list_name = 'mirflickr_1K'
+        image_list_filename = os.path.join(
+            support_dirname, image_list_name + '.txt')
+        with open(image_list_filename) as f:
+            image_filenames = [x.strip() for x in f.readlines()]
+
+        image_filenames = glob(os.path.join(support_dirname, 'images', '*'))
+        sigmas = [10]
+        for ind, img_fname in enumerate(image_filenames):
+            for sigma in sigmas:
+                output_fname = os.path.join(dirname, str(ind))
+                shutil.copy(img_fname, output_fname + '.jpg')
+                img = rayleigh.Image(img_fname)
+
+                img.histogram_colors(palette, output_fname + '_hist.png')
+                
+                fname = output_fname + '_hist_direct_sigma_{}.png'.format(sigma)
+                #img.histogram_colors_smoothed(palette, sigma, fname, direct=True)
+
+                fname = output_fname + '_hist_sigma_{}.png'.format(sigma)
+                #img.histogram_colors_smoothed(palette, sigma, fname, direct=False)
+                
+                img.output_quantized_to_palette(
+                    palette, output_fname + '_quantized.png')
+
+                img.output_color_palette_image(
+                    palette, output_fname + '_my_palette.png')
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,7 +27,7 @@ app.debug = True  # TODO: comment out in production
 
 
 sic = rayleigh.SearchableImageCollectionExact.load(
-    '../data/mirflickr_25K_exact_chi_square_0.pickle')
+    '../data/mirflickr_1K_exact_euclidean_0.pickle')
 
 
 @app.route('/')
@@ -44,7 +44,7 @@ def parse_colors_and_values(request):
     else:
         values = np.array(values, 'float') / sum(values)
     palette_query = rayleigh.PaletteQuery(colors, values)
-    color_hist = palette_query.histogram_colors(sic.ic.palette, sigma=20)
+    color_hist = palette_query.histogram_colors(sic.ic.palette, sigma=15)
     return color_hist
 
 
@@ -55,7 +55,7 @@ def get_images():
     Get all images sorted by distance to the color histogram given.
     """
     color_hist = parse_colors_and_values(request)
-    data = sic.search_by_color_hist(color_hist, 40)
+    data = sic.search_by_color_hist(color_hist, 80)
     print("Sending: ", data)
     return make_json_response(data)
 
@@ -79,7 +79,7 @@ def get_palette_query_histogram():
 @app.route('/similar_to/<ind>')
 def get_similar_images(ind):
     hist = sic.ic.hists[int(ind), :]
-    data = sic.search_by_color_hist(hist, 40)
+    data = sic.search_by_color_hist(hist, 80)
     return make_json_response(data)
 
 

@@ -30,12 +30,12 @@
 {% for query_image, results in data %}
   <div id="results_block">
     <div class="query_image">
-      <img src="{{ query_image['filename'] }}" width="{{ '%d' | format(query_image['width'] / 4) }}" height="{{ '%d' | format(query_image['height'] / 4) }}" />
+      <img src="{{ query_image['url'] }}" width="{{ '%d' | format(query_image['width'] / 4) }}" height="{{ '%d' | format(query_image['height'] / 4) }}" />
     </div>
     <div class="query_results">
     {% for result in results %}
       <div class="query_result">
-        <img src="{{ result['filename'] }}" width="{{ '%d' | format(result['width'] / 4) }}" height="{{ '%d' | format(result['height'] / 4) }}" />
+        <img src="{{ result['url'] }}" width="{{ '%d' | format(result['width'] / 4) }}" height="{{ '%d' | format(result['height'] / 4) }}" />
         <br />
         <span>{{ '%.3f'|format(result['distance']) }}</span>
       </div>

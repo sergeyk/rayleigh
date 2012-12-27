@@ -16,17 +16,17 @@ class TestSyntheticCollection(unittest.TestCase):
 
     def test_synthetic_creation(self):
         # save palette histograms and quantized versions
-        sigma = 20
+        sigma = 10
         n_samples = len(self.filenames) / 3
         s_filenames = shuffle(self.filenames, random_state=0, n_samples=n_samples)
         for filename in s_filenames:
             img = rayleigh.Image(filename)
 
             fname = filename + '_hist_sigma_{}.png'.format(sigma)
-            img.histogram_colors(self.palette, sigma, fname)
+            img.histogram_colors_smoothed(self.palette, sigma, fname, direct=False)
 
             q_filename = filename + '_quant.png'
-            img.quantize_to_palette(self.palette, q_filename)
+            img.output_quantized_to_palette(self.palette, q_filename)
 
     def test_synthetic_search(self):
         # set up jinja template
@@ -59,7 +59,7 @@ class TestFlickrCollection(unittest.TestCase):
         image_list_name = 'mirflickr_25K'
         dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
         num_queries = 50
-        palette = rayleigh.Palette(num_hues=8, sat_range=2, light_range=2)
+        palette = rayleigh.Palette(num_hues=11, sat_range=3, light_range=2)
         palette.output(dirname=dirname)
 
         # Set up jinja template.
@@ -86,7 +86,7 @@ class TestFlickrCollection(unittest.TestCase):
             ic.save(ic_filename)
 
         # Make several searchable collections.
-        def create_or_load_sic(algorithm, distance_metric, num_dimensions):
+        def create_or_load_sic(algorithm, distance_metric, sigma, num_dimensions):
             if algorithm == 'exact':
                 sic_class = SearchableImageCollectionExact
             elif algorithm == 'flann':
@@ -96,48 +96,48 @@ class TestFlickrCollection(unittest.TestCase):
             else:
                 raise Exception("Unknown algorithm.")
 
-            filename = os.path.join(dirname, '{}_{}_{}_{}.pickle'.format(
-                image_list_name, algorithm, distance_metric, num_dimensions))
+            filename = os.path.join(dirname, '{}_{}_{}_{}_{}.pickle'.format(
+                image_list_name, algorithm, distance_metric, sigma, num_dimensions))
 
             if os.path.exists(filename):
                 sic = sic_class.load(filename)
             else:
-                sic = sic_class(ic, distance_metric, num_dimensions)
+                sic = sic_class(ic, distance_metric, sigma, num_dimensions)
                 sic.save(filename)
 
             return sic
-
-        # there are 45 dimensions in our palette.
-        modes = [
-            ('exact', 'euclidean', 12), ('exact', 'manhattan', 12),
-            ('exact', 'euclidean', 24), ('exact', 'manhattan', 24),
-            ('exact', 'euclidean', 0),  ('exact', 'manhattan', 0),
-            ('exact', 'chi_square', 0),
-
-            ('flann', 'euclidean', 12), ('flann', 'manhattan', 12),
-            ('flann', 'euclidean', 24), ('flann', 'manhattan', 24),
-            ('flann', 'euclidean', 0),  ('flann', 'manhattan', 0),
-            ('flann', 'chi_square', 0),
-
-            ('ckdtree', 'euclidean', 24), ('ckdtree', 'manhattan', 24)]
-        mode_sics = {}
-
-        for mode in modes:
-            mode_sics[mode] = create_or_load_sic(*mode)
 
         # search several query images and output to html summary
         np.random.seed(0)
         image_inds = np.random.permutation(range(len(image_filenames)))
         image_inds = image_inds[:num_queries]
 
+        # there are ~200 dimensions in our palette.
+        modes = [
+            ('exact', 'euclidean', 10, 50), ('exact', 'manhattan', 10, 50),
+            ('exact', 'euclidean', 10, 0),  ('exact', 'manhattan', 10, 0),
+            ('exact', 'chi_square', 10, 0), ('exact', 'chi_square', 20, 0),
+            ('exact', 'chi_square', 30, 0), ('exact', 'euclidean', 20, 0),
+
+            ('flann', 'euclidean', 10, 50), ('flann', 'manhattan', 10, 50),
+            ('flann', 'euclidean', 10, 0),  ('flann', 'manhattan', 10, 0),
+            ('flann', 'chi_square', 10, 0),
+            ('flann', 'euclidean', 20, 0),  ('flann', 'manhattan', 20, 0),
+            ('flann', 'chi_square', 20, 0),
+
+            ('ckdtree', 'euclidean', 10, 30), ('ckdtree', 'manhattan', 10, 30)
+        ]
+
         time_elapsed = {}
         for mode in modes:
+            sic = create_or_load_sic(*mode)
             tt.tic(mode)
-            data = [mode_sics[mode].search_by_image_in_dataset(ind) for ind in image_inds]
+            data = [sic.search_by_image_in_dataset(ind) for ind in image_inds]
             time_elapsed[mode] = tt.qtoc(mode)
             print("Time elapsed for %s: %.3f s" % (mode, time_elapsed[mode]))
 
-            filename = os.path.join(dirname, 'matches_{}_{}_{}.html'.format(*mode))
+            filename = os.path.join(
+                dirname, 'matches_{}_{}_{}_{}.html'.format(*mode))
             with open(filename, 'w') as f:
                 f.write(template.render(
                     num_queries=num_queries, time_elapsed=time_elapsed[mode],

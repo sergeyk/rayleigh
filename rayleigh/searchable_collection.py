@@ -8,7 +8,8 @@ from sklearn.metrics.pairwise import \
 import pyflann
 from scipy.spatial import cKDTree
 
-import rayleigh
+import util
+from image import Image
 
 from skpyutils import TicToc
 tt = TicToc()
@@ -32,29 +33,42 @@ class SearchableImageCollection(object):
         """
         cPickle.dump(self, open(filename, 'w'), 2)
 
-    def __init__(self, image_collection, distance_metric, num_dimensions):
+    def __init__(self, image_collection, dist_metric, sigma, num_dimensions):
         """
         Initialize with a rayleigh.ImageCollection, a distance_metric, and the
         number of dimensions to reduce the histograms to.
 
         Args:
-            - image_collection (rayleigh.ImageCollection)
+            - image_collection (ImageCollection)
 
-            - distance_metric (string): must be in self.DISTANCE_METRICS
+            - dist_metric (string): must be in self.DISTANCE_METRICS
+
+            - sigma (nonnegative float) [0]:
+                Amount of smoothing applied to histograms. If 0, none.
 
             - num_dimensions (int): number of dimensions to reduce
                 the histograms to, using PCA. If 0, do not reduce dimensions.
         """
         self.ic = image_collection
-
-        if distance_metric not in self.DISTANCE_METRICS:
+        self.distance_metric = dist_metric
+        if self.distance_metric not in self.DISTANCE_METRICS:
             raise Exception("Unsupported distance metric.")
-        self.distance_metric = distance_metric
-
         self.num_dimensions = num_dimensions
         self.hists_reduced = self.ic.hists
+        self.sigma = sigma
+        if self.sigma > 0:
+            self.smooth_histograms()
         if self.num_dimensions > 0:
             self.reduce_dimensionality()
+
+    def smooth_histograms(self):
+        """
+        Smooth histograms with a Gaussian.
+        """
+        for i in range(self.hists_reduced.shape[0]):
+            color_hist = self.hists_reduced[i, :]
+            self.hists_reduced[i, :] = util.smooth_histogram(
+                self.ic.palette, color_hist, self.sigma)
 
     def reduce_dimensionality(self):
         """
@@ -83,7 +97,7 @@ class SearchableImageCollection(object):
         
         See search_by_color_hist().
         """
-        query_img = rayleigh.Image(image_filename)
+        query_img = Image(image_filename)
         color_hist = query_img.histogram_colors(self.ic.palette)
         return query_img.as_dict(), self.search_by_color_hist(color_hist)
 
@@ -108,8 +122,8 @@ class SearchableImageCollection(object):
         for ind, dist in zip(nn_ind, nn_dists):
             img = self.ic.images[ind]
             results.append({
-                'width': img.orig_width, 'height': img.orig_height,
-                'filename': cgi.escape(img.filename), 'distance': dist,
+                'width': img.orig_w, 'height': img.orig_h,
+                'url': cgi.escape(img.url), 'distance': dist,
                 'ind': int(ind)})
         return results
 
