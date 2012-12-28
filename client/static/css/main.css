@@ -44,11 +44,11 @@ body {
 
 #images {
   float: left;
-  width: 1200px;
+  width: 1000px;
 }
 
 #images img {
-  margin: 3px;
+  margin: 2px;
 }
 
 div.result {
@@ -62,20 +62,24 @@ div.result {
 
 #colors {
   float: left;
-  width: 290px;
+  width: 280px;
 }
 
 #colors a {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: inline-block;
   border: 0px solid gray;
   margin: 0px;
+  padding: 0px;
 }
 
 #colors a.selected {
-  border: 2px solid black;
-  margin: -2px;
+  width: 18px;
+  height: 18px;
+  border: 3px solid black;
+  margin: -3px;
+  padding: 0px;
 }
 
 #colors span {

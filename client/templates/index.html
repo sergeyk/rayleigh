@@ -8,76 +8,12 @@
   <div id="content">
     <div id="colors">
       <p>Possible colors:</p>
-<a id="#ffaaaa"><span style="background-color: #ffaaaa" /></a>
-<a id="#ffd4aa"><span style="background-color: #ffd4aa" /></a>
-<a id="#ffffaa"><span style="background-color: #ffffaa" /></a>
-<a id="#d4ffaa"><span style="background-color: #d4ffaa" /></a>
-<a id="#aaffaa"><span style="background-color: #aaffaa" /></a>
-<a id="#aaffff"><span style="background-color: #aaffff" /></a>
-<a id="#aad5ff"><span style="background-color: #aad5ff" /></a>
-<a id="#aaaaff"><span style="background-color: #aaaaff" /></a>
-<a id="#caaaff"><span style="background-color: #caaaff" /></a>
-<a id="#f0aaff"><span style="background-color: #f0aaff" /></a>
-<a id="#ffaad5"><span style="background-color: #ffaad5" /></a>
-<a id="#ffffff"><span style="background-color: #ffffff" /></a>
-<br />
-<a id="#ff5555"><span style="background-color: #ff5555" /></a>
-<a id="#ffaa55"><span style="background-color: #ffaa55" /></a>
-<a id="#fffe55"><span style="background-color: #fffe55" /></a>
-<a id="#aaff55"><span style="background-color: #aaff55" /></a>
-<a id="#55ff55"><span style="background-color: #55ff55" /></a>
-<a id="#55ffff"><span style="background-color: #55ffff" /></a>
-<a id="#55aaff"><span style="background-color: #55aaff" /></a>
-<a id="#5556ff"><span style="background-color: #5556ff" /></a>
-<a id="#9655ff"><span style="background-color: #9655ff" /></a>
-<a id="#e055ff"><span style="background-color: #e055ff" /></a>
-<a id="#ff55ab"><span style="background-color: #ff55ab" /></a>
-<a id="#bfbfbf"><span style="background-color: #bfbfbf" /></a>
-<br />
-<a id="#ff0000"><span style="background-color: #ff0000" /></a>
-<a id="#ff7f00"><span style="background-color: #ff7f00" /></a>
-<a id="#fffe00"><span style="background-color: #fffe00" /></a>
-<a id="#80ff00"><span style="background-color: #80ff00" /></a>
-<a id="#01ff00"><span style="background-color: #01ff00" /></a>
-<a id="#00ffff"><span style="background-color: #00ffff" /></a>
-<a id="#0080ff"><span style="background-color: #0080ff" /></a>
-<a id="#0001ff"><span style="background-color: #0001ff" /></a>
-<a id="#6100ff"><span style="background-color: #6100ff" /></a>
-<a id="#d100ff"><span style="background-color: #d100ff" /></a>
-<a id="#ff0081"><span style="background-color: #ff0081" /></a>
-<a id="#808080"><span style="background-color: #808080" /></a>
-<br />
-<a id="#aa0000"><span style="background-color: #aa0000" /></a>
-<a id="#aa5500"><span style="background-color: #aa5500" /></a>
-<a id="#aaa900"><span style="background-color: #aaa900" /></a>
-<a id="#55aa00"><span style="background-color: #55aa00" /></a>
-<a id="#00aa00"><span style="background-color: #00aa00" /></a>
-<a id="#00aaaa"><span style="background-color: #00aaaa" /></a>
-<a id="#0055aa"><span style="background-color: #0055aa" /></a>
-<a id="#0001aa"><span style="background-color: #0001aa" /></a>
-<a id="#4100aa"><span style="background-color: #4100aa" /></a>
-<a id="#8b00aa"><span style="background-color: #8b00aa" /></a>
-<a id="#aa0056"><span style="background-color: #aa0056" /></a>
-<a id="#404040"><span style="background-color: #404040" /></a>
-<br />
-<a id="#aa7777"><span style="background-color: #aa7777" /></a>
-<a id="#aa9077"><span style="background-color: #aa9077" /></a>
-<a id="#aaaa77"><span style="background-color: #aaaa77" /></a>
-<a id="#91aa77"><span style="background-color: #91aa77" /></a>
-<a id="#77aa77"><span style="background-color: #77aa77" /></a>
-<a id="#77aaaa"><span style="background-color: #77aaaa" /></a>
-<a id="#7791aa"><span style="background-color: #7791aa" /></a>
-<a id="#7777aa"><span style="background-color: #7777aa" /></a>
-<a id="#8a77aa"><span style="background-color: #8a77aa" /></a>
-<a id="#a177aa"><span style="background-color: #a177aa" /></a>
-<a id="#aa7791"><span style="background-color: #aa7791" /></a>
-<a id="#000000"><span style="background-color: #000000" /></a>
+        {% include 'palette.html' %}
       </p>
       <p>
       <form id="selected-colors-submit" method="get" action="/images">
         <input type="hidden" id="colors" name="colors" value="" />
         <input id="submitButton" type="submit" value="Search" onClick="getImages(); return false;" />
-        <input id="submitButton2" type="submit" value="See histogram" onClick="getHistogram(); return false;" />
       </form>
       </p>
       <div id="palette_query"></div>
@@ -91,15 +27,6 @@
     $(document).ready(function() {
       console.log("The palette is:", $('#colors a').map(function(i,el) { return el.id; }));
 
-      getHistogram = function(event) {
-        var colors = Object.keys(selected_colors);
-        $.get('/query_histogram', data={colors: colors.join(',')},
-          success=function(data) {
-            //console.log("Received: ", data);
-            $('#palette_query').html('<img width="100%" src="data:image/png;base64,'+data+'" />');
-          });
-      }
-
       getSimilarImages = function(ind) {
         console.log("here");
         $.getJSON('/similar_to/' + ind,
@@ -108,15 +35,20 @@
 
       var update_images = function(json_data) {
         //console.log("Received: ", json_data);
+        
+        // Display palette query histogram.
+        $('#palette_query').html('<img width="100%" src="data:image/png;base64,'+json_data['pq_hist']+'" />');
+        
+        // Display the image results.
         items = [];
-        $.each(json_data, function(i, val) {
-          filename = val['filename'].replace('/Volumes/WD Data/', '/static/')
+        $.each(json_data['results'], function(i, val) {
+          filename = val['url'].replace('/Volumes/WD Data/', '/static/')
           var a_histogram = '<a href="/image_histogram/' + val['ind'] + '.png">histogram</a>';
           var a_similar = '<a href="#" onclick="getSimilarImages(\'' + val['ind'] + '\'); return false;">similar</a>';
           var img = '<img src="'+filename+'" alt="'+val['distance']+'" width="'+val['width']/4+'" height="'+val['height']/4 + '" />'
           items.push('<div class="result">' + img + '<br />' + a_histogram + ' | ' + a_similar + '</div>');
         });
-        console.log(items);
+        //console.log(items);
         $('#images').html(items.join(''));
       }
 
@@ -139,6 +71,8 @@
         console.log("Selected colors:");
         console.log(selected_colors);
         $('#colors input')[0].value = Object.keys(selected_colors);
+
+        getImages();
       };
 
       $('a').each(function(i,el) {

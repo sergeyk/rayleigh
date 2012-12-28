@@ -9,6 +9,7 @@ import os
 repo_dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, repo_dirname)
 import rayleigh
+import rayleigh.util as util
 
 
 def make_json_response(body, status_code=200):
@@ -26,8 +27,11 @@ app = Flask(__name__)
 app.debug = True  # TODO: comment out in production
 
 
-sic = rayleigh.SearchableImageCollectionExact.load(
-    '../data/mirflickr_1K_exact_euclidean_0.pickle')
+sic = rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    repo_dirname, 'data/mirflickr_25K_exact_chi_square_16_0.pickle'))
+
+
+sigma = 24
 
 
 @app.route('/')
@@ -35,58 +39,43 @@ def index():
     return render_template('index.html')
 
 
-def parse_colors_and_values(request):
-    print("Request args: {}".format(request.args))
+def parse_palette_query(request):
     colors = request.args.get('colors', '').split(',')
     values = request.args.get('values', None)
     if values is None:
         values = np.ones(len(colors), 'float') / len(colors)
     else:
         values = np.array(values, 'float') / sum(values)
-    palette_query = rayleigh.PaletteQuery(colors, values)
-    color_hist = palette_query.histogram_colors(sic.ic.palette, sigma=15)
-    return color_hist
+    return rayleigh.PaletteQuery(dict(zip(colors, values)))
 
 
-# TODO: be able to take URLs like #colors=71b99e,5486bd;weights=50,50;
 @app.route('/images')
 def get_images():
     """
     Get all images sorted by distance to the color histogram given.
+    Also provide the palette image and the histogram of the query.
     """
-    color_hist = parse_colors_and_values(request)
-    data = sic.search_by_color_hist(color_hist, 80)
-    print("Sending: ", data)
-    return make_json_response(data)
+    palette_query = parse_palette_query(request)
+    color_hist = palette_query.histogram_colors_smoothed(
+        sic.ic.palette, sigma=sigma, direct=False)
+    b64_hist = util.output_histogram_base64(color_hist, sic.ic.palette)
+    results = sic.search_by_color_hist(color_hist, 80)
+    return make_json_response({'results': results, 'pq_hist': b64_hist})
 
 
 @app.route('/image_histogram/<ind>.png')
 def get_image_histogram(ind):
     hist = sic.ic.hists[int(ind), :]
-    png_output = rayleigh.util.plot_histogram_flask(hist, sic.ic.palette)
+    png_output = rayleigh.util.output_histogram_for_flask(hist, sic.ic.palette)
     response = make_response(png_output.getvalue())
     response.headers['Content-Type'] = 'image/png'
     return response
-
-
-@app.route('/query_histogram')
-def get_palette_query_histogram():
-    hist = parse_colors_and_values(request)
-    data = rayleigh.util.plot_histogram_html(hist, sic.ic.palette)
-    return data
 
 
 @app.route('/similar_to/<ind>')
 def get_similar_images(ind):
     hist = sic.ic.hists[int(ind), :]
     data = sic.search_by_color_hist(hist, 80)
-    return make_json_response(data)
-
-
-@app.route('/stats/', methods=['GET'])
-def get_statistics():
-    # TODO
-    data = None
     return make_json_response(data)
 
 
