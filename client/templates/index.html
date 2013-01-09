@@ -7,39 +7,54 @@
 <body>
   <div id="content">
     <div id="colors">
-      <p>Possible colors:</p>
-        {% include 'palette.html' %}
-      </p>
-      <p>
-      <form id="selected-colors-submit" method="get" action="/images">
-        <input type="hidden" id="colors" name="colors" value="" />
-        <input id="submitButton" type="submit" value="Search" onClick="getImages(); return false;" />
-      </form>
-      </p>
+      <h3>Possible colors</h3>
+      {% include 'palette.html' %}
+      
+      <h3>Search algorithm</h3>
+      <div id="sic_types"></div>
+
+      <h3>Palette histogram</h3>
       <div id="palette_query"></div>
+
+      <!--<form id="selected-colors-submit" method="get" action="/images">
+        <input id="submitButton" type="submit" value="Search" onClick="getImages(); return false;" />
+      </form>-->
     </div>
     <div id="images">
-      Images that match the colors:
+      <h3>Images that match the colors</h3>
     </div>
   </div>
-  <script src="/static/js/ext/jquery-1.8.3.js"></script>
+  <script src="/static/js/jquery-1.8.3.js"></script>
+  <script src="/static/js/sprintf-0.7-beta1.js"></script>
   <script>
     $(document).ready(function() {
-      console.log("The palette is:", $('#colors a').map(function(i,el) { return el.id; }));
+      // console.log("The palette is:", $('#colors a').map(function(i,el) { return el.id; }));
+
+      selected_colors = {};
+      sic_type = '';
+
+      // Get the types of SICs available and add links to them.
+      $.getJSON('/sic_types',
+        success=function(json_data) {
+          sic_type = json_data[0];
+
+          items = [];
+          $.each(json_data, function(i, val) {
+            items.push('<li><a href="#" onclick="sic_type=\'' + val + '\'; getImages(); return false;">' + val + '</a></li>');
+          });
+          $('#sic_types').html('<ul>' + items.join('') + '</ul>');
+      });
 
       getSimilarImages = function(ind) {
-        console.log("here");
-        $.getJSON('/similar_to/' + ind,
-          success=update_images);
+        url = '/similar_to/' + sic_type + '/' + ind;
+        $.getJSON(url, success=update_images);
       }
 
       var update_images = function(json_data) {
-        //console.log("Received: ", json_data);
-        
         // Display palette query histogram.
         $('#palette_query').html('<img width="100%" src="data:image/png;base64,'+json_data['pq_hist']+'" />');
         
-        // Display the image results.
+        // Display image results.
         items = [];
         $.each(json_data['results'], function(i, val) {
           filename = val['url'].replace('/Volumes/WD Data/', '/static/')
@@ -48,17 +63,14 @@
           var img = '<img src="'+filename+'" alt="'+val['distance']+'" width="'+val['width']/4+'" height="'+val['height']/4 + '" />'
           items.push('<div class="result">' + img + '<br />' + a_histogram + ' | ' + a_similar + '</div>');
         });
-        //console.log(items);
         $('#images').html(items.join(''));
       }
 
       getImages = function(event) {
-        var colors = Object.keys(selected_colors);
-        $.getJSON('/images', data={colors: colors.join(',')},
+        $.getJSON(sprintf('/%s/search', sic_type),
+          data={colors: Object.keys(selected_colors).join(',')},
           success=update_images);
       }
-
-      selected_colors = {};
 
       var toggleSelected = function(event) {
         if (this.getAttribute('class') == 'selected') {
@@ -70,7 +82,6 @@
         }
         console.log("Selected colors:");
         console.log(selected_colors);
-        $('#colors input')[0].value = Object.keys(selected_colors);
 
         getImages();
       };
