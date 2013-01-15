@@ -12,10 +12,7 @@ It provides the UI for selecting a color palette to search with, or an image, an
 
 ## Introduction
 
-Although the images I save to my collection tend to be mostly black and white, I hereby profess: I love color.
-The vibrant colors of Indian [saris](#TODO), the soft pastels of a [poster](#TODO) in NYC subways last summer, my laboriously entered complementary orange to the standard 'blue' in matplotlib.
-
-The point of color, to me, is two-fold: the fine differences in hue and shading, and the interaction of multiples.
+To me, the point of color is two-fold: the fine differences in hue and shading, and the interaction of multiples.
 I wanted to be able to search large image collections not only by the presence of a single color, but by a composition of multiple colors---and to treat colors as more nuanced than mere hues.
 
 ### Prior Art

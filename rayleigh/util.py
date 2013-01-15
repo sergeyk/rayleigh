@@ -1,9 +1,8 @@
 import os
 import numpy as np
 import tempfile
-import StringIO
+import cStringIO as StringIO
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from sklearn.metrics import euclidean_distances
 from skimage.io import imsave
 
@@ -108,7 +107,7 @@ def plot_histogram(color_hist, palette, plot_filename=None):
     return fig
 
 
-def output_histogram_for_flask(color_hist, palette):
+def output_plot_for_flask(color_hist, palette):
     """
     Return an object suitable to be sent as an image by Flask,
     containing the color palette histogram.
@@ -122,10 +121,10 @@ def output_histogram_for_flask(color_hist, palette):
         - png_output (StringIO)
     """
     fig = plot_histogram(color_hist, palette)
-    canvas = FigureCanvas(fig)
-    png_output = StringIO.StringIO()
-    canvas.print_png(png_output)
-    return png_output
+    strIO = StringIO.StringIO()
+    plt.savefig(strIO, dpi=fig.dpi)
+    strIO.seek(0)
+    return strIO
 
 
 def output_histogram_base64(color_hist, palette):

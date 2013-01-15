@@ -1,5 +1,11 @@
 """
+Encapsulate the list of hex colors and array of Lab values representations
+of a palette (codebook) of colors.
+
 Provide methods to work with color conversion and the Palette class.
+
+Provide a parametrized method to generate a palette that covers the range
+of colors.
 """
 
 import os
@@ -13,32 +19,27 @@ from util import rgb2hex
 
 class Palette(object):
     """
-    Encapsulate the list of hex colors and array of Lab values representations
-    of a palette (codebook) of colors.
+    Create a color palette (codebook) in the form of a 2D grid of colors,
+    as described in the parameters list below.
+    Further, the rightmost column has num_hues gradations from black to white.
 
-    Provide a parametrized method to generate a palette that covers the range
-    of colors.
+    Parameters
+    ----------
+    num_hues : int
+        number of colors with full lightness and saturation, in the middle
+    sat_range : int
+        number of rows above middle row that show
+        the same hues with decreasing saturation.
+    light_range : int
+        number of rows below middle row that show
+        the same hues with decreasing lightness.
+
+    Returns
+    -------
+    palette: rayleigh.Palette
     """
 
     def __init__(self, num_hues=8, sat_range=2, light_range=2):
-        """
-        Create a color palette (codebook) in the form of a 2D grid of colors.
-
-        Args:
-            - num_hues (int): number of colors with full
-                lightness and saturation, in the middle row.
-
-            - sat_range (int): number of rows above middle row that show
-                the same hues with decreasing saturation.
-
-            - light_range (int) number of rows below middle row that show
-                the same hues with decreasing lightness.
-
-        Further, the bottom row has num_hues gradations from black to white.
-
-        Returns:
-            (Palette)
-        """
         height = 1 + sat_range + (2 * light_range - 1)
         # generate num_hues+1 hues, but don't take the last one:
         # hues are on a circle, and we would be oversampling the origin
@@ -98,11 +99,10 @@ class Palette(object):
         Output an image of the palette, josn list of the hex
         colors, and an HTML color picker for it.
 
-        Args:
-            - dirname (string): directory for the files to be output
-
-        Returns:
-            - None
+        Parameters
+        ----------
+        dirname : string
+            directory for the files to be output
         """
         def get_palette_html():
             """

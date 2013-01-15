@@ -1,21 +1,37 @@
+"""
+ImageCollection stores color information about images and exposes a method to
+add images to it, with support for parallel processing.
+"""
+
+
 import cPickle
 import numpy as np
 import IPython.parallel as parallel
 import rayleigh
-
 from skpyutils import TicToc
 tt = TicToc()
 
 
 class ImageCollection(object):
     """
-    Collection of images with their color palette histograms.
+    Initalize an empty ImageCollection with a color palette that will be
+    used to extract color information from images.
+
+    Parameters
+    ----------
+    palette : Palette
+        Palette object representing the accepted colors.
     """
+
+    def __init__(self, palette):
+        self.palette = palette
+        self.images = []
+        self.hists = np.zeros((0, len(self.palette.hex_list)))
 
     @staticmethod
     def load(filename):
         """
-        Load ImageCollection from filename and prepare the data structures.
+        Load ImageCollection from filename.
         """
         return cPickle.load(open(filename))
 
@@ -25,33 +41,23 @@ class ImageCollection(object):
         """
         cPickle.dump(self, open(filename, 'w'), 2)
 
-    def __init__(self, palette):
-        """
-        Initalize an empty ImageCollection with a color palette,
-        and set up needed data structures.
 
-        Args:
-          - palette (Palette)
-        """
-        self.palette = palette
-        self.images = []
-        self.hists = np.zeros((0, len(self.palette.hex_list)))
 
 
     def add_images(self, image_urls, image_ids=None):
         """
-        Add all images in the list of URLs.
+        Add all images in a list of URLs.
 
         If ipcluster is running, load images in parallel.
 
-        Args:
-            - image_urls (list)
-
-            - image_ids (list) [None]:
-                If given, images are stored with the given ids.
-                If None, the index of the image in the dataset is its id.
+        Parameters
+        ----------
+        image_urls : list
+        image_ids : list, optional
+            If given, images are stored with the given ids.
+            If None, the index of the image in the dataset is its id.
         """
-        # need to construct the arguments due to ipython's pickling nonsense
+        # need to construct the arguments list due to IPython.parallel's pickling
         jobs = [(url, self.palette) for url in image_urls]
 
         print("Loading images...")

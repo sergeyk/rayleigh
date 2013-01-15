@@ -1,15 +1,19 @@
 import numpy as np
 import simplejson as json
 from bson import json_util
-from flask import Flask, render_template, request, make_response
+import cStringIO as StringIO
+from skimage.io import imsave
+from flask import Flask, render_template, request, make_response, send_file
 import sys
 import os
-
 
 repo_dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, repo_dirname)
 import rayleigh
 import rayleigh.util as util
+
+app = Flask(__name__)
+app.debug = False  # TODO: make sure this is False in production
 
 
 def make_json_response(body, status_code=200):
@@ -21,10 +25,6 @@ def make_json_response(body, status_code=200):
 
 def bad_id_response():
     return make_json_response({'message': 'invalid id'}, 400)
-
-
-app = Flask(__name__)
-app.debug = False  # TODO: make sure this is False in production
 
 
 """
@@ -41,7 +41,7 @@ sics = {
         repo_dirname, 'data/mirflickr_25K_flann_chi_square_8_0.pickle'))
 }
 
-default_sic_type = "chi_square_exact"
+default_sic_type = "chi_square_exact_8"
 
 """
 Set the smoothing parameter applied to the color palette queries.
@@ -63,8 +63,9 @@ def parse_request():
     """
     Parse the GET request string for the SIC type and query palette information.
 
-    Returns:
-        - pq (PaletteQuery)
+    Returns
+    -------
+    pq : rayleigh.PaletteQuery
     """
     colors = request.args.get('colors', '').split(',')
     values = request.args.get('values', None)
@@ -92,20 +93,30 @@ def search_with_palette(sic_type):
     return make_json_response({'results': results, 'pq_hist': b64_hist})
 
 
-@app.route('/image_histogram/<sic_type>/<int:ind>.png')
-def get_image_histogram(sic_type, ind):
-    sic = sics[sic_type]
-    hist = sic.ic.hists[int(ind), :]
-    png_output = rayleigh.util.output_histogram_for_flask(hist, sic.ic.palette)
-    response = make_response(png_output.getvalue())
-    response.headers['Content-Type'] = 'image/png'
-    return response
+# TODO: add sigma parameter
+@app.route('/image_histogram/<image_id>.png')
+def get_image_histogram(image_id):
+    sic = sics[default_sic_type]
+    hist = sic.ic.hists[int(image_id), :]
+    strIO = rayleigh.util.output_plot_for_flask(hist, sic.ic.palette)
+    return send_file(strIO, mimetype='image/png')
 
 
-@app.route('/similar_to/<sic_type>/<int:ind>')
-def get_similar_images(sic_type, ind):
+@app.route('/palette_image/<image_id>.png')
+def get_palette_image(image_id):
+    sic = sics[default_sic_type]
+    hist = sic.ic.hists[int(image_id), :]
+    img = rayleigh.util.color_hist_to_palette_image(hist, sic.ic.palette)
+    strIO = StringIO.StringIO()
+    imsave(strIO, img, plugin='pil', format_str='png')
+    strIO.seek(0)
+    return send_file(strIO, mimetype='image/png')
+
+
+@app.route('/similar_to/<sic_type>/<image_id>')
+def get_similar_images(sic_type, image_id):
     sic = sics[sic_type]
-    hist = sic.ic.hists[int(ind), :]
+    hist = sic.ic.hists[int(image_id), :]
     data = sic.search_by_color_hist(hist, 80)
     return make_json_response(data)
 

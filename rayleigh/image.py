@@ -1,3 +1,9 @@
+"""
+Define two classes with shared functionality: PalleteQuery and Image.
+They share methods to histogram the colors with a given palette,
+and to output a palette image.
+"""
+
 import numpy as np
 from skimage.io import imread, imsave
 from skimage.color import rgb2lab, lab2rgb
@@ -7,28 +13,23 @@ import util
 
 class ColorObject(object):
     """
-    Methods to histogram the colors with a given palette,
-    and to output a palette image.
+    This is in essence an abstract class, extended by PaletteQuery and Image.
     """
-
-    def discard_data(self):
-        """
-        Drop the pixel data (useful when storing Image in an ImageCollection.
-        """
-        self.lab_array = None
 
     def histogram_colors(self, palette, plot_filename=None):
         """
         Return a palette histogram of colors in the image.
 
-        Args:
-            - palette (rayleigh.Palette): Containing K colors.
+        Parameters
+        ----------
+        palette : rayleigh.Palette
+            Containing K colors.
+        plot_filename : string, optional
+            If given, save histogram to this filename.
 
-            - plot_filename (string) [optional]:
-                If given, save histogram to this filename.
-
-        Returns:
-            - color_hist (K, ndarray)
+        Returns
+        -------
+        color_hist : (K,) ndarray
         """
         color_hist = util.histogram_colors(palette, self.lab_array)
         if plot_filename is not None:
@@ -41,20 +42,21 @@ class ColorObject(object):
         Return a palette histogram of colors in the image, smoothed with
         a Gaussian.
 
-        Args:
-            - palette (rayleigh.Palette):
-                Consisting of K colors.
+        Parameters
+        ----------
+        palette : rayleigh.Palette
+            Containing K colors.
 
-            - sigma (float):
-                Variance of the smoothing Gaussian.
+        sigma : float
+            Variance of the smoothing Gaussian.
 
-            - direct (bool) [default=True]:
-                If True, constructs a smoothed histogram directly from pixels.
-                If False, constructs a nearest-color histogram and then
-                smoothes it.
+        direct : bool, optional
+            If True, constructs a smoothed histogram directly from pixels.
+            If False, constructs a nearest-color histogram and then smoothes it.
 
-        Returns:
-            - color_hist (K, ndarray)
+        Returns
+        -------
+        color_hist : (K,) ndarray
         """
         if direct:
             color_hist = util.histogram_colors_smoothed(
@@ -70,17 +72,16 @@ class ColorObject(object):
         """
         Output the main colors of the image to a "palette image."
 
-        Args:
-            - palette (rayleigh.Palette)
+        Parameters
+        ----------
+        palette : rayleigh.Palette
+            Containing K colors.
 
-            - filename (string): where image will be written
+        filename : string
+            Where image will be written.
 
-            - percentile (int) [90]:
-                Output only colors above this percentile of prevalence
-                in the image.
-
-        Returns:
-            - None
+        percentile : int, optional
+            Output only colors above this percentile of prevalence in the image.
         """
         color_hist = util.histogram_colors(palette, self.lab_array)
         util.color_hist_to_palette_image(
@@ -104,21 +105,22 @@ class PaletteQuery(ColorObject):
 
 class Image(ColorObject):
     """
-    TODO
+    Read the image at the URL in RGB format, downsample if needed,
+    and convert to Lab colorspace.
+    Store original dimensions, resize_factor, and the filename of the image.
+
+    Image dimensions will be resized independently such that neither width nor
+    height exceed the maximum allowed dimension MAX_DIMENSION.
+
+    Parameters
+    ----------
+    url : string
+        a URL or file path to the image to load.
     """
 
     MAX_DIMENSION = 240 + 1
 
     def __init__(self, url):
-        """
-        Read the image at the URL in RGB format, downsample if needed,
-        and convert to Lab colorspace.
-        Store original dimensions, resize_factor, and the filename of the image.
-
-        Args:
-            - url (string):
-                a URL or file path to the image to load.
-        """
         self.url = url
         img = imread(url)
 
@@ -159,19 +161,25 @@ class Image(ColorObject):
         """
         return {'url': self.url,
                 'width': self.orig_w, 'height': self.orig_h}
+    
+    def discard_data(self):
+        """
+        Drop the raw pixel data (useful when storing in an ImageCollection).
+        """
+        self.lab_array = None
 
     def output_quantized_to_palette(self, palette, filename):
         """
         Save to filename a version of the image with all colors quantized
         to the nearest color in the given palette.
 
-        Args:
-            - palette (rayleigh.Palette)
+        Parameters
+        ----------
+        palette : rayleigh.Palette
+            Containing K colors.
 
-            - filename (string): where image will be written
-
-        Returns:
-            - None
+        filename : string
+            Where image will be written.
         """
         dist = euclidean_distances(
             palette.lab_array, self.lab_array, squared=True).T

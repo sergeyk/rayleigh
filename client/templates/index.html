@@ -57,11 +57,22 @@
         // Display image results.
         items = [];
         $.each(json_data['results'], function(i, val) {
-          filename = val['url'].replace('/Volumes/WD Data/', '/static/')
-          var a_histogram = '<a href="/image_histogram/' + val['ind'] + '.png">histogram</a>';
-          var a_similar = '<a href="#" onclick="getSimilarImages(\'' + val['ind'] + '\'); return false;">similar</a>';
-          var img = '<img src="'+filename+'" alt="'+val['distance']+'" width="'+val['width']/4+'" height="'+val['height']/4 + '" />'
-          items.push('<div class="result">' + img + '<br />' + a_histogram + ' | ' + a_similar + '</div>');
+          var id = val['id'];
+          var filename = val['url'].replace('/Volumes/WD Data/', '/static/')
+          
+          var histogram_url = sprintf('/image_histogram/%s.png', id);
+          var a_histogram = sprintf('<a href="%s">histogram</a>', histogram_url);
+
+          var palette_url = sprintf('/palette_image/%s.png', id);
+          var a_palette = sprintf('<a href="%s">palette</a>', palette_url);
+          
+          var onclick = sprintf('getSimilarImages(\'%s\'); return false;', id);
+          var a_similar = sprintf('<a href="#" onclick="%s">similar</a>', onclick);
+          
+          var img = sprintf('<img src="%s" alt="%s" width="%s" height="%s" />',
+            filename, val['distance'], val['width']/4, val['height']/4);
+          var links = [a_histogram, a_palette, a_similar].join(' | ');
+          items.push(sprintf('<div class="result">%s<br />%s</div>', img, links));
         });
         $('#images').html(items.join(''));
       }

@@ -1,3 +1,7 @@
+"""
+Methods to search an ImageCollection with brute force, exhaustive search.
+"""
+
 import cgi
 import abc
 import cPickle
@@ -17,38 +21,23 @@ tt = TicToc()
 
 class SearchableImageCollection(object):
     """
-    Methods to search an ImageCollection with brute force, exhaustive search.
+    Initialize with a rayleigh.ImageCollection, a distance_metric, and the
+    number of dimensions to reduce the histograms to.
+
+    Parameters
+    ----------
+    image_collection : rayleigh.ImageCollection
+    dist_metric : string
+        must be in self.DISTANCE_METRICS
+    sigma : nonnegative float
+        Amount of smoothing applied to histograms.
+        If 0, none.
+    num_dimensions : int
+        number of dimensions to reduce the histograms to, using PCA.
+        If 0, do not reduce dimensions.
     """
-
-    @staticmethod
-    def load(filename):
-        """
-        Load ImageCollection from filename and prepare the data structures.
-        """
-        return cPickle.load(open(filename))
-
-    def save(self, filename):
-        """
-        Save self to filename.
-        """
-        cPickle.dump(self, open(filename, 'w'), 2)
-
     def __init__(self, image_collection, dist_metric, sigma, num_dimensions):
-        """
-        Initialize with a rayleigh.ImageCollection, a distance_metric, and the
-        number of dimensions to reduce the histograms to.
 
-        Args:
-            - image_collection (ImageCollection)
-
-            - dist_metric (string): must be in self.DISTANCE_METRICS
-
-            - sigma (nonnegative float) [0]:
-                Amount of smoothing applied to histograms. If 0, none.
-
-            - num_dimensions (int): number of dimensions to reduce
-                the histograms to, using PCA. If 0, do not reduce dimensions.
-        """
         self.ic = image_collection
         self.distance_metric = dist_metric
         if self.distance_metric not in self.DISTANCE_METRICS:
@@ -60,6 +49,19 @@ class SearchableImageCollection(object):
             self.smooth_histograms()
         if self.num_dimensions > 0:
             self.reduce_dimensionality()
+
+    @staticmethod
+    def load(filename):
+        """
+        Load ImageCollection from filename.
+        """
+        return cPickle.load(open(filename))
+
+    def save(self, filename):
+        """
+        Save self to filename.
+        """
+        cPickle.dump(self, open(filename, 'w'), 2)
 
     def smooth_histograms(self):
         """
@@ -103,33 +105,34 @@ class SearchableImageCollection(object):
             self.ic.palette, sigma=self.sigma, direct=False)
         return query_img.as_dict(), self.search_by_color_hist(color_hist)
 
-    def search_by_color_hist(self, color_hist, num=20, transform=True):
+    def search_by_color_hist(self, color_hist, num=20):
         """
         Search images in database by color similarity to the given histogram.
 
-        Args:
-            - color_hist (K, ndarray): histogram over the color palette.
+        Parameters
+        ----------
+        color_hist : (K,) ndarray
+            histogram over the color palette
+        num : int
+            number of nearest neighbors to ret
 
-            - num (int): number of nearest neighbors to return.
-
-            - transform (bool) [True]:
-                Reduce the dimensionality of the query histogram?
-
-        Returns:
-            - query_img (dict): info about the query image
-
-            - results (list): list of dicts of nearest neighbors to query
+        Returns
+        -------
+        query_img : dict
+            info about the query image
+        results : list
+            list of dicts of nearest neighbors to query
         """
-        if transform and self.num_dimensions > 0:
+        if self.num_dimensions > 0:
             color_hist = self.pca.transform(color_hist)
         nn_ind, nn_dists = self.nn_ind(color_hist, num)
         results = []
         for ind, dist in zip(nn_ind, nn_dists):
             img = self.ic.images[ind]
             results.append({
+                'id': int(ind), 'url': cgi.escape(img.url),
                 'width': img.orig_w, 'height': img.orig_h,
-                'url': cgi.escape(img.url), 'distance': dist,
-                'ind': int(ind)})
+                'distance': dist})
         return results
 
     @abc.abstractmethod
@@ -140,15 +143,20 @@ class SearchableImageCollection(object):
 
         Override this search method in extending classes.
 
-        Args:
-            - color_hist (K, ndarray): histogram over the color palette.
+        Parameters
+        ----------
+        color_hist : (K,) ndarray
+            histogram over the color palette
+        num : int
+            number of nearest neighbors to return.
 
-            - num (int): number of nearest neighbors to return.
+        Returns
+        -------
+        nn_ind : (num,) ndarray
+            Indices of the neighbors in the dataset.
 
-        Returns:
-            - nn_ind (num, ndarray): indices of the neighbors in the dataset.
-
-            - nn_dists (num, ndarray): distances to these neighbors.
+        nn_dists (num,) ndarray
+            Distances to the neighbors returned.
         """
         pass
 
