@@ -3,9 +3,10 @@ import simplejson as json
 from bson import json_util
 import cStringIO as StringIO
 from skimage.io import imsave
-from flask import Flask, render_template, request, make_response, send_file
+from flask import Flask, render_template, request, make_response, send_file, redirect, url_for, Markup
 import sys
 import os
+from urllib2 import unquote
 
 repo_dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, repo_dirname)
@@ -14,6 +15,7 @@ import rayleigh.util as util
 
 app = Flask(__name__)
 app.debug = False  # TODO: make sure this is False in production
+app.debug = True
 
 
 def make_json_response(body, status_code=200):
@@ -21,10 +23,6 @@ def make_json_response(body, status_code=200):
     resp.status_code = status_code
     resp.mimetype = 'application/json'
     return resp
-
-
-def bad_id_response():
-    return make_json_response({'message': 'invalid id'}, 400)
 
 
 """
@@ -37,8 +35,8 @@ sics = {
     'chi_square_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/mirflickr_25K_exact_chi_square_16_0.pickle')),
     
-    'chi_square_flann_8': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
-        repo_dirname, 'data/mirflickr_25K_flann_chi_square_8_0.pickle'))
+    # 'chi_square_flann_8': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
+    #     repo_dirname, 'data/mirflickr_25K_flann_chi_square_8_0.pickle'))
 }
 
 default_sic_type = "chi_square_exact_8"
@@ -56,37 +54,74 @@ def sic_types():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect(url_for('search_with_palette'))
 
 
-def parse_request():
+def parse_sic_type():
     """
-    Parse the GET request string for the SIC type and query palette information.
+    Parse the GET request string for the SIC type.
 
     Returns
     -------
-    pq : rayleigh.PaletteQuery
+    sic_type : string
     """
-    colors = request.args.get('colors', '').split(',')
-    values = request.args.get('values', None)
-    if values is None:
+    sic_type = request.args.get('sic_type', '')
+    if len(sic_type) < 1:
+        return default_sic_type
+    return sic_type
+
+
+def parse_colors_and_values():
+    """
+    Parse the GET request string for the palette query information.
+    The query string looks like "?colors=#ffffff,#000000&values=0.5,0.5
+
+    Returns
+    -------
+    colors : dict of hex color strings to their nromalized value, or None
+    """
+    colors = request.args.get('colors', '')
+    print(request.args)
+
+    if len(colors) < 1:
+        return None
+    colors = unquote(colors).split(',')
+
+    values = request.args.get('values', '')
+    if len(values) < 1:
         values = np.ones(len(colors), 'float') / len(colors)
     else:
-        values = np.array(values, 'float') / sum(values)
-    pq = rayleigh.PaletteQuery(dict(zip(colors, values)))
+        values = np.array(unquote(values).split(','), 'float') / sum(values)
+    
+    assert(len(values) == len(colors))
+    return dict(zip(colors, values.tolist()))
 
-    return pq
+
+@app.route('/search_with_palette')
+def search_with_palette():
+    sic_type = parse_sic_type()
+    colors = parse_colors_and_values()
+
+    def checked(st):
+        return 'checked' if st == sic_type else ''
+    
+    return render_template(
+        'index.html',
+        sic_types=sics.keys(),
+        sic_type=sic_type, checked=checked,
+        colors=Markup(json.dumps(colors)))
 
 
-@app.route('/<sic_type>/search')
-def search_with_palette(sic_type):
-    """
-    Get all images sorted by distance to the color histogram given.
-    Also provide the palette image and the histogram of the query.
-    """
-    sic = sics[sic_type]
-    palette_query = parse_request()
-    color_hist = palette_query.histogram_colors_smoothed(
+@app.route('/search_with_palette_json')
+def search_with_palette_json():
+    sic = sics[parse_sic_type()]
+    colors = parse_colors_and_values()
+    if colors is None:
+        return make_json_response({'message': 'no request data'}, 400)
+
+    print(colors)
+    pq = rayleigh.PaletteQuery(colors)
+    color_hist = pq.histogram_colors_smoothed(
         sic.ic.palette, sigma=sigma, direct=False)
     b64_hist = util.output_histogram_base64(color_hist, sic.ic.palette)
     results = sic.search_by_color_hist(color_hist, 80)

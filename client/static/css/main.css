@@ -65,12 +65,16 @@ div.result {
   text-decoration: none;
 }
 
-#colors {
+#search_sidebar {
   float: left;
   width: 280px;
 }
 
-#colors a {
+#palette_search div {
+  padding-bottom: .666em;
+}
+
+#palette_search_form a {
   width: 18px;
   height: 18px;
   display: inline-block;
@@ -79,7 +83,7 @@ div.result {
   padding: 0px;
 }
 
-#colors a.selected {
+#palette_search_form a.selected {
   width: 18px;
   height: 18px;
   border: 3px solid black;
@@ -87,7 +91,7 @@ div.result {
   padding: 0px;
 }
 
-#colors span {
+#palette_search_form span {
   display: inline-block;
   width: 100%;
   height: 100%;
