@@ -54,9 +54,9 @@ class TestFlickrCollection(unittest.TestCase):
         > find /Volumes/WD\ Data/mirflickr -name "*.jpg" | head -n 100 > mirflickr_100.txt
         """
         # Parametrization of our test.
-        image_list_name = 'mirflickr_100'
-        image_list_name = 'mirflickr_1K'
-        image_list_name = 'mirflickr_25K'
+        image_list_name = 'flickr_1K'
+        num_images = int(1e3)
+
         dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
         num_queries = 50
         palette = rayleigh.Palette(num_hues=10, light_range=3, sat_range=2)
@@ -67,13 +67,9 @@ class TestFlickrCollection(unittest.TestCase):
         env = Environment(loader=FileSystemLoader(support_dirname))
         template = env.get_template('matches.html')
         
-        # Construct the list of images in the dataset.
-        image_list_filename = os.path.join(
-            support_dirname, image_list_name + '.txt')
-        with open(image_list_filename) as f:
-            image_filenames = [x.strip() for x in f.readlines()]
-
         # Load the image collection.
+        data_filename = os.path.join(repo_dirname, 'data', 'flickr_1M.json.gz')
+        ids, urls = rayleigh.ids_and_urls_from_dataset(data_filename, num_images)
         ic_filename = os.path.join(
             temp_dirname, '{}.pickle'.format(image_list_name))
 
@@ -82,7 +78,7 @@ class TestFlickrCollection(unittest.TestCase):
             ic = rayleigh.ImageCollection.load(ic_filename)
         else:
             ic = rayleigh.ImageCollection(palette)
-            ic.add_images(image_filenames)
+            ic.add_images(urls, ids)
             ic.save(ic_filename)
 
         # Make several searchable collections.
@@ -109,7 +105,7 @@ class TestFlickrCollection(unittest.TestCase):
 
         # search several query images and output to html summary
         np.random.seed(0)
-        image_inds = np.random.permutation(range(len(image_filenames)))
+        image_inds = np.random.permutation(range(len(urls)))
         image_inds = image_inds[:num_queries]
 
         # there are 88 dimensions in our palette.

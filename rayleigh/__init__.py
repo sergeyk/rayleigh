@@ -8,6 +8,10 @@ from palette import Palette
 
 from image import Image, PaletteQuery
 
+from assemble_flickr_dataset import \
+    assemble_flickr_dataset, \
+    ids_and_urls_from_dataset
+
 from collection import ImageCollection
 
 from searchable_collection import \

@@ -41,9 +41,6 @@ class ImageCollection(object):
         """
         cPickle.dump(self, open(filename, 'w'), 2)
 
-
-
-
     def add_images(self, image_urls, image_ids=None):
         """
         Add all images in a list of URLs.

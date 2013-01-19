@@ -35,16 +35,11 @@ class TestImage(unittest.TestCase):
         assert(os.path.exists(fname))
 
     def test_flickr(self):
+        # TODO: output a single HTML file instead of using the file browser to
+        # look at all these files
         dirname = skutil.makedirs(os.path.join(temp_dirname, 'image_flickr'))
         palette = rayleigh.Palette(num_hues=10, light_range=3, sat_range=2)
         palette.output(dirname)
-
-
-        image_list_name = 'mirflickr_1K'
-        image_list_filename = os.path.join(
-            support_dirname, image_list_name + '.txt')
-        with open(image_list_filename) as f:
-            image_filenames = [x.strip() for x in f.readlines()]
 
         image_filenames = glob(os.path.join(support_dirname, 'images', '*'))
         sigmas = [10]
@@ -57,10 +52,10 @@ class TestImage(unittest.TestCase):
                 img.histogram_colors(palette, output_fname + '_hist.png')
                 
                 fname = output_fname + '_hist_direct_sigma_{}.png'.format(sigma)
-                #img.histogram_colors_smoothed(palette, sigma, fname, direct=True)
+                img.histogram_colors_smoothed(palette, sigma, fname, direct=True)
 
                 fname = output_fname + '_hist_sigma_{}.png'.format(sigma)
-                #img.histogram_colors_smoothed(palette, sigma, fname, direct=False)
+                img.histogram_colors_smoothed(palette, sigma, fname, direct=False)
                 
                 img.output_quantized_to_palette(
                     palette, output_fname + '_quantized.png')

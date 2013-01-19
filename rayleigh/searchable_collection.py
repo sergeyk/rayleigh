@@ -91,7 +91,7 @@ class SearchableImageCollection(object):
         """
         query_img = self.ic.images[img_ind]
         color_hist = self.hists_reduced[img_ind, :]
-        results = self.search_by_color_hist(color_hist, transform=False)
+        results = self.search_by_color_hist(color_hist, reduced=True)
         return query_img.as_dict(), results
 
     def search_by_image(self, image_filename, num=20):
@@ -105,7 +105,7 @@ class SearchableImageCollection(object):
             self.ic.palette, sigma=self.sigma, direct=False)
         return query_img.as_dict(), self.search_by_color_hist(color_hist)
 
-    def search_by_color_hist(self, color_hist, num=20):
+    def search_by_color_hist(self, color_hist, num=20, reduced=False):
         """
         Search images in database by color similarity to the given histogram.
 
@@ -113,8 +113,10 @@ class SearchableImageCollection(object):
         ----------
         color_hist : (K,) ndarray
             histogram over the color palette
-        num : int
+        num : int, optional
             number of nearest neighbors to ret
+        reduced : boolean, optional
+            is the given color_hist already reduced in dimensionality?
 
         Returns
         -------
@@ -123,7 +125,7 @@ class SearchableImageCollection(object):
         results : list
             list of dicts of nearest neighbors to query
         """
-        if self.num_dimensions > 0:
+        if self.num_dimensions > 0 and not reduced:
             color_hist = self.pca.transform(color_hist)
         nn_ind, nn_dists = self.nn_ind(color_hist, num)
         results = []
