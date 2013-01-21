@@ -108,7 +108,8 @@ def ids_and_urls_from_dataset(data_filename, num_images):
     urls = reduce(operator.add, [urls for urls in urls_by_date.values()])
 
     def get_id(url):
-        return re.search('flickr.com/\d+/(.+)_.+_.+.jpg', url).groups()[0]
+        _id = re.search('flickr.com/\d+/(.+)_.+_.+.jpg', url).groups()[0]
+        return 'flickr_{}'.format(_id)
     ids = [get_id(url) for url in urls]
     assert(len(set(ids)) == len(ids))
     return ids[:num_images], urls[:num_images]

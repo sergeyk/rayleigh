@@ -1,15 +1,64 @@
 """
 ImageCollection stores color information about images and exposes a method to
 add images to it, with support for parallel processing.
+The datastore is MongoDB, so a server must be running (launch with the settings
+in mongo.conf).
 """
-
-
+from __future__ import print_function
+import sys
 import cPickle
+from warnings import warn
 import numpy as np
 import IPython.parallel as parallel
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+from bson import Binary
 import rayleigh
 from skpyutils import TicToc
 tt = TicToc()
+
+
+def get_mongodb_collection():
+    """
+    Establish connection to MongoDB and return the relevant collection.
+
+    Returns
+    -------
+    collection : pymongo.Collection
+        Pymongo Collection of images and their histograms.
+    """
+    try:
+        connection = MongoClient('localhost', 27666)
+    except ConnectionFailure:
+        raise Exception("Cannot instantiate ImageCollection without \
+                         a MongoDB server running on port 27666")
+    return connection.image_collection.images
+
+
+# For parallel execution, function must be in module scope
+collection = get_mongodb_collection()
+
+
+def process_image(args):
+    """
+    Returns
+    -------
+    success : boolean
+    """
+    image_url, image_id, palette = args
+    try:
+        # Check if the image with this id already exists in the database.
+        if collection.find({'id': image_id}).count() > 0:
+            return True
+        img = rayleigh.Image(image_url, image_id)
+        hist = rayleigh.util.histogram_colors_strict(img.lab_array, palette)
+        bson_hist = Binary(cPickle.dumps(hist, protocol=2))
+        img_data = dict(img.as_dict().items() + {'hist': bson_hist}.items())
+        collection.insert(img_data)
+        return True
+    except Exception as e:
+        print("process_image encountered error: {}".format(e), file=sys.stderr)
+        return False
 
 
 class ImageCollection(object):
@@ -41,10 +90,56 @@ class ImageCollection(object):
         """
         cPickle.dump(self, open(filename, 'w'), 2)
 
+    def get_hists(self, max_num=10000):
+        """
+        Return a representative sample of histograms of all images
+        as a single numpy array.
+
+        Parameters
+        ----------
+        max_num : int, optional
+            maximum number of images to return
+
+        Returns
+        -------
+        hists : (N,K) ndarray
+            where N is the number of images in the database and K is the number
+            of colors in the palette.
+        """
+        cursor = collection.find().limit(max_num)
+        return np.array([cPickle.loads(image['hist']) for image in cursor])
+
+    def get_image(self, image_id):
+        """
+        Return information about the image at id, or None if it doesn't exist.
+
+        Parameters
+        ----------
+        image_id : string
+
+        Returns
+        -------
+        image : dict, or None
+            information in database for this image id.
+        """
+        results = collection.find({'id': image_id})
+        if results.count() == 1:
+            return results[0]
+        elif results.count() == 0:
+            return None
+
+    def get_id_ind_map(self):
+        """
+        Return dict of id to index and index to id.
+        """
+        ids = [d['id'] for d in collection.find()]
+        ids_to_ind = zip(ids, range(len(ids)))
+        ind_to_ids = zip(range(len(ids)), ids)
+        return dict(ids_to_ind + ind_to_ids)
+
     def add_images(self, image_urls, image_ids=None):
         """
         Add all images in a list of URLs.
-
         If ipcluster is running, load images in parallel.
 
         Parameters
@@ -54,31 +149,31 @@ class ImageCollection(object):
             If given, images are stored with the given ids.
             If None, the index of the image in the dataset is its id.
         """
-        # need to construct the arguments list due to IPython.parallel's pickling
-        jobs = [(url, self.palette) for url in image_urls]
+        collection.ensure_index('id')
+
+        # Construct the arguments list due to IPython.parallel's pickling
+        if image_ids is None:
+            jobs = [(url, None, self.palette) for url in image_urls]
+        else:
+            jobs = [(url, _id, self.palette) for url, _id in zip(image_urls, image_ids)]
 
         print("Loading images...")
         tt = TicToc()
+        parallelized = False
         try:
             rc = parallel.Client()
             lview = rc.load_balanced_view()
+            parallelized = True
+        except:
+            warn(Warning("Launch an IPython cluster to parallelize \
+                           ImageCollection loading."))
+            
+        if parallelized:
             results = lview.map(process_image, jobs)
             results.wait_interactive()
-        except:
-            print("WARNING: launch an ipython cluster to parallelize loading.")
+        else:
             results = map(process_image, jobs)
-        print("Finished in %.3f s" % tt.qtoc())
 
-        images, hists = zip(*results)
-        self.images += images
-        self.hists = np.vstack((self.hists, np.array(hists)))
-        assert(len(self.images) == self.hists.shape[0])
-
-
-# For parallel execution, function must be in module scope
-def process_image(args):
-    image_url, palette = args
-    img = rayleigh.Image(image_url)
-    hist = img.histogram_colors(palette)
-    img.discard_data()
-    return img, hist
+        collection.ensure_index('id')
+        print("Finished inserting {} images in {:.3f} s".format(
+            len(image_urls), tt.qtoc()))

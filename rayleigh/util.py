@@ -31,21 +31,23 @@ def hex2rgb(hexcolor_str):
     return (rgb(color[:2]), rgb(color[2:4]), rgb(color[4:6]))
 
 
-def color_hist_to_palette_image(color_hist, palette,
-                                percentile=90, filename=None):
+def color_hist_to_palette_image(color_hist, palette, percentile=90,
+                                width=200, height=50, filename=None):
     """
     Output the main colors in the histogram to a "palette image."
 
-    Args:
-        - color_hist (K, ndarray)
+    Parameters
+    ----------
+    color_hist : (K,) ndarray
+    palette : rayleigh.Palette
+    percentile : int, optional:
+        Output only colors above this percentile of prevalence in the image.
+    filename : string, optional:
+        If given, save the resulting image to file.
 
-        - palette (Palette)
-
-        - percentile (int) [90]:
-            Output only colors above this percentile of prevalence in the image.
-
-        - filename (string) [None]:
-            If given, save the resulting image to file.
+    Returns
+    -------
+    rgb_image : ndarray
     """
     ind = np.argsort(-color_hist)
     ind = ind[color_hist[ind] > np.percentile(color_hist, percentile)]
@@ -146,63 +148,105 @@ def output_histogram_base64(color_hist, palette):
     return data_uri
 
 
-def histogram_colors(palette, color_array, plot_filename=None):
+def histogram_colors_strict(lab_array, palette, plot_filename=None):
     """
-    Assign colors in the image to the nearest color in the palette.
+    Return a palette histogram of colors in the image.
 
-    Args:
-        - palette (Palette): containing K colors.
+    Parameters
+    ----------
+    lab_array : (N,3) ndarray
+        The L*a*b color of each of N pixels.
+    palette : rayleigh.Palette
+        Containing K colors.
+    plot_filename : string, optional
+        If given, save histogram to this filename.
 
-        - color_array (N,3 ndarray):
-            N is the number of data points, columns are L, a, b values.
-
-    Returns:
-        - color_hist (K, ndarray)
+    Returns
+    -------
+    color_hist : (K,) ndarray
     """
-    # This is the fastest way that I've found. Can time with:
+    # This is the fastest way that I've found.
     # >>> %%timeit -n 200 from sklearn.metrics import euclidean_distances
-    # >>> euclidean_distances(palette, self.lab_array, squared=True)
-    dist = euclidean_distances(palette.lab_array, color_array, squared=True).T
+    # >>> euclidean_distances(palette, lab_array, squared=True)
+    dist = euclidean_distances(palette.lab_array, lab_array, squared=True).T
     min_ind = np.argmin(dist, axis=1)
     num_colors = palette.lab_array.shape[0]
-    num_pixels = color_array.shape[0]
+    num_pixels = lab_array.shape[0]
     color_hist = 1. * np.bincount(min_ind, minlength=num_colors) / num_pixels
+    if plot_filename is not None:
+        plot_histogram(color_hist, palette, plot_filename)
     return color_hist
+
+
+def histogram_colors_smoothed(lab_array, palette, sigma=10,
+                              plot_filename=None, direct=True):
+    """
+    Returns a palette histogram of colors in the image, smoothed with
+    a Gaussian. Can smooth directly per-pixel, or after computing a strict
+    histogram.
+
+    Parameters
+    ----------
+    lab_array : (N,3) ndarray
+        The L*a*b color of each of N pixels.
+    palette : rayleigh.Palette
+        Containing K colors.
+    sigma : float
+        Variance of the smoothing Gaussian.
+    direct : bool, optional
+        If True, constructs a smoothed histogram directly from pixels.
+        If False, constructs a nearest-color histogram and then smoothes it.
+
+    Returns
+    -------
+    color_hist : (K,) ndarray
+    """
+    if direct:
+        color_hist_smooth = histogram_colors_smoothed(palette, lab_array, sigma)
+    else:
+        color_hist_strict = histogram_colors_strict(palette, lab_array)
+        color_hist_smooth = smooth_histogram(palette, color_hist_strict, sigma)
+    if plot_filename is not None:
+        plot_histogram(color_hist_smooth, palette, plot_filename)
+    return color_hist_smooth
 
 
 def smooth_histogram(palette, color_hist, sigma=10):
     """
     Smooth the given palette histogram with a Gaussian of variance sigma.
 
-    Args:
-        - palette (Palette): containing K colors.
+    Parameters
+    ----------
+    palette : rayleigh.Palette
+        containing K colors.
+    color_hist : (K,) ndarray
 
-        - color_hist (K, ndarray)
-
-    Returns:
-        - smoothed_color_hist (K, ndarray)
+    Returns
+    -------
+    color_hist_smooth : (K,) ndarray
     """
     n = 2. * sigma ** 2
     weights = np.exp(-palette.distances / n)
     norm_weights = weights / weights.sum(1)[:, np.newaxis]
-    smoothed_color_hist = (norm_weights * color_hist).sum(1)
-    smoothed_color_hist[smoothed_color_hist < 1e-5] = 0
-    return smoothed_color_hist
+    color_hist_smooth = (norm_weights * color_hist).sum(1)
+    color_hist_smooth[color_hist_smooth < 1e-5] = 0
+    return color_hist_smooth
 
 
-def histogram_colors_smoothed(palette, color_array, sigma=10):
+def histogram_colors_with_smoothing(palette, color_array, sigma=10):
     """
     Assign colors in the image to nearby colors in the palette, weighted by
     distance in Lab color space.
 
-    Args:
-        - palette (Palette): containing K colors
-
-        - color_array (N,3 ndarray):
-            N is the number of data points, columns are L, a, b values.
-
-        - sigma (float): (0,1] value to control the steepness of exponential
-            falloff. To see the effect:
+    Parameters
+    ----------
+    palette : rayleigh.Palette
+        containing K colors.
+    lab_array (N,3) ndarray:
+        N is the number of data points, columns are L, a, b values.
+    sigma : float
+        (0,1] value to control the steepness of exponential falloff.
+        To see the effect:
 
     >>> from pylab import *
     >>> ds = linspace(0,5000) # squared distance
@@ -211,10 +255,11 @@ def histogram_colors_smoothed(palette, color_array, sigma=10):
     >>> sigma=40; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
     >>> ylim([0,1]); legend()
 
-            sigma=20 seems reasonable: hits 0 around squared distance of 4000.
+        sigma=20 seems reasonable: hits 0 around squared distance of 4000.
 
     Returns:
-        - color_hist (K, ndarray): the normalized soft histogram of colors in the image.
+    color_hist : (K,) ndarray
+        the normalized, smooth histogram of colors.
     """
     dist = euclidean_distances(palette.lab_array, color_array, squared=True).T
     n = 2. * sigma ** 2
@@ -225,6 +270,7 @@ def histogram_colors_smoothed(palette, color_array, sigma=10):
     normalizing = weights.sum(1)
     normalizing[normalizing == 0] = 1e16
     normalized_weights = weights / normalizing[:, np.newaxis]
+
     color_hist = normalized_weights.sum(0)
     color_hist /= color_array.shape[0]
     color_hist[color_hist < 1e-5] = 0

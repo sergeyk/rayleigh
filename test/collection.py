@@ -50,12 +50,12 @@ class TestSyntheticCollection(unittest.TestCase):
 class TestFlickrCollection(unittest.TestCase):
     def test_flickr(self):
         """
-        Load subset of MIRFLICKR 25K [dataset](http://press.liacs.nl/mirflickr/).
-        > find /Volumes/WD\ Data/mirflickr -name "*.jpg" | head -n 100 > mirflickr_100.txt
+        Load subset of the Flickr interestingness dataset that can be compiled
+        with the rayleigh.assemble_flickr_dataset module.
         """
         # Parametrization of our test.
-        image_list_name = 'flickr_1K'
-        num_images = int(1e3)
+        image_list_name = 'flickr_10K'
+        num_images = int(1e5)
 
         dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
         num_queries = 50
@@ -70,6 +70,10 @@ class TestFlickrCollection(unittest.TestCase):
         # Load the image collection.
         data_filename = os.path.join(repo_dirname, 'data', 'flickr_1M.json.gz')
         ids, urls = rayleigh.ids_and_urls_from_dataset(data_filename, num_images)
+        # import cPickle
+        # with open('temp.pickle') as f:
+        #     ids, urls = zip(*cPickle.load(f))
+
         ic_filename = os.path.join(
             temp_dirname, '{}.pickle'.format(image_list_name))
 
@@ -121,13 +125,13 @@ class TestFlickrCollection(unittest.TestCase):
             ('exact', 'chi_square', 8, 0),
             ('exact', 'chi_square', 16, 0),
 
-            ('flann', 'euclidean', 8, 22),
+            #('flann', 'euclidean', 8, 22),
             #('flann', 'euclidean', 8, 0),
 
             #('flann', 'manhattan', 8, 22),
             #('flann', 'manhattan', 8, 0),
 
-            ('flann', 'chi_square', 8, 0),
+            #('flann', 'chi_square', 8, 0),
             
             #('ckdtree', 'euclidean', 8, 22),
             #('ckdtree', 'manhattan', 8, 22)
@@ -137,7 +141,7 @@ class TestFlickrCollection(unittest.TestCase):
         for mode in modes:
             sic = create_or_load_sic(*mode)
             tt.tic(mode)
-            data = [sic.search_by_image_in_dataset(ind) for ind in image_inds]
+            data = [sic.search_by_image_in_dataset(ids[ind]) for ind in image_inds]
             time_elapsed[mode] = tt.qtoc(mode)
             print("Time elapsed for %s: %.3f s" % (mode, time_elapsed[mode]))
 

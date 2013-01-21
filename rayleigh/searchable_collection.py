@@ -37,13 +37,13 @@ class SearchableImageCollection(object):
         If 0, do not reduce dimensions.
     """
     def __init__(self, image_collection, dist_metric, sigma, num_dimensions):
-
         self.ic = image_collection
+        self.id_ind_map = self.ic.get_id_ind_map()
         self.distance_metric = dist_metric
         if self.distance_metric not in self.DISTANCE_METRICS:
             raise Exception("Unsupported distance metric.")
         self.num_dimensions = num_dimensions
-        self.hists_reduced = self.ic.hists.copy()
+        self.hists_reduced = self.ic.get_hists()
         self.sigma = sigma
         if self.sigma > 0:
             self.smooth_histograms()
@@ -82,17 +82,29 @@ class SearchableImageCollection(object):
         self.hists_reduced = self.pca.transform(self.hists_reduced)
         tt.toc('reduce_dimensionality')
 
-    def search_by_image_in_dataset(self, img_ind, num=20):
+    def search_by_image_in_dataset(self, img_id, num=20):
         """
-        Search images in database for similarity to the image at img_ind in the
-        dataset.
+        Search images in database for similarity to the image with img_id in
+        the database.
 
-        See search_by_color_hist().
+        See search_by_color_hist() for implementation.
+
+        Parameters
+        ----------
+        img_id : string
+        num : int, optional
+
+        Returns
+        -------
+        img_data : dict
+        results : list
+            list of dicts of nearest neighbors to query
         """
-        query_img = self.ic.images[img_ind]
+        query_img = self.ic.get_image(img_id)
+        img_ind = self.id_ind_map[img_id]
         color_hist = self.hists_reduced[img_ind, :]
         results = self.search_by_color_hist(color_hist, reduced=True)
-        return query_img.as_dict(), results
+        return query_img, results
 
     def search_by_image(self, image_filename, num=20):
         """
@@ -130,11 +142,11 @@ class SearchableImageCollection(object):
         nn_ind, nn_dists = self.nn_ind(color_hist, num)
         results = []
         for ind, dist in zip(nn_ind, nn_dists):
-            img = self.ic.images[ind]
-            results.append({
-                'id': int(ind), 'url': cgi.escape(img.url),
-                'width': img.orig_w, 'height': img.orig_h,
-                'distance': dist})
+            img_id = self.id_ind_map[ind]
+            img = self.ic.get_image(img_id)
+            img['url'] = cgi.escape(img['url'])
+            img['distance'] = dist
+            results.append(img)
         return results
 
     @abc.abstractmethod

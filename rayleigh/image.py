@@ -1,9 +1,3 @@
-"""
-Define two classes with shared functionality: PalleteQuery and Image.
-They share methods to histogram the colors with a given palette,
-and to output a palette image.
-"""
-
 import numpy as np
 from skimage.io import imread, imsave
 from skimage.color import rgb2lab, lab2rgb
@@ -11,99 +5,24 @@ from sklearn.metrics import euclidean_distances
 import util
 
 
-class ColorObject(object):
+class PaletteQuery(object):
     """
-    This is in essence an abstract class, extended by PaletteQuery and Image.
+    Extract a L*a*b color array from a dict representation of a palette query.
+    The array can then be used to histogram colors, output a palette image, etc.
+
+    Parameters
+    ----------
+    palette_query : dict
+        A mapping of hex colors to unnormalized values, representing proportion
+        in the palette (e.g. {'#ffffff': 20, '#cc3300': 0.5}).
     """
-
-    def histogram_colors(self, palette, plot_filename=None):
-        """
-        Return a palette histogram of colors in the image.
-
-        Parameters
-        ----------
-        palette : rayleigh.Palette
-            Containing K colors.
-        plot_filename : string, optional
-            If given, save histogram to this filename.
-
-        Returns
-        -------
-        color_hist : (K,) ndarray
-        """
-        color_hist = util.histogram_colors(palette, self.lab_array)
-        if plot_filename is not None:
-            util.plot_histogram(color_hist, palette, plot_filename)
-        return color_hist
-
-    def histogram_colors_smoothed(self, palette, sigma=10,
-                                  plot_filename=None, direct=True):
-        """
-        Return a palette histogram of colors in the image, smoothed with
-        a Gaussian.
-
-        Parameters
-        ----------
-        palette : rayleigh.Palette
-            Containing K colors.
-
-        sigma : float
-            Variance of the smoothing Gaussian.
-
-        direct : bool, optional
-            If True, constructs a smoothed histogram directly from pixels.
-            If False, constructs a nearest-color histogram and then smoothes it.
-
-        Returns
-        -------
-        color_hist : (K,) ndarray
-        """
-        if direct:
-            color_hist = util.histogram_colors_smoothed(
-                palette, self.lab_array, sigma)
-        else:
-            color_hist = util.histogram_colors(palette, self.lab_array)
-            color_hist = util.smooth_histogram(palette, color_hist, sigma)
-        if plot_filename is not None:
-            util.plot_histogram(color_hist, palette, plot_filename)
-        return color_hist
-
-    def output_color_palette_image(self, palette, filename, percentile=90):
-        """
-        Output the main colors of the image to a "palette image."
-
-        Parameters
-        ----------
-        palette : rayleigh.Palette
-            Containing K colors.
-
-        filename : string
-            Where image will be written.
-
-        percentile : int, optional
-            Output only colors above this percentile of prevalence in the image.
-        """
-        color_hist = util.histogram_colors(palette, self.lab_array)
-        util.color_hist_to_palette_image(
-            color_hist, palette, percentile, filename)
-
-
-class PaletteQuery(ColorObject):
-    """
-    TODO
-    """
-
     def __init__(self, palette_query):
-        """
-        Args:
-            - palette_query (dict): e.g. {'#ffffff': 20, '#cc3300': 0.5}
-        """
         rgb_image = util.palette_query_to_rgb_image(palette_query)
         h, w, d = tuple(rgb_image.shape)
         self.lab_array = rgb2lab(rgb_image).reshape((h * w, d))
 
 
-class Image(ColorObject):
+class Image(object):
     """
     Read the image at the URL in RGB format, downsample if needed,
     and convert to Lab colorspace.
@@ -115,58 +34,52 @@ class Image(ColorObject):
     Parameters
     ----------
     url : string
-        a URL or file path to the image to load.
+        URL or file path of the image to load.
+    id : string, optional
+        Name or some other id of the image. For example, the Flickr ID.
     """
 
     MAX_DIMENSION = 240 + 1
 
-    def __init__(self, url):
+    def __init__(self, url, _id=None):
+        self.id = _id
         self.url = url
         img = imread(url)
 
-        # grayscale
+        # Handle grayscale and RGBA images.
+        # TODO: Should be smarter here in the future, but for now simply remove
+        # the alpha channel if present.
         if img.ndim == 2:
             img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
-
-        # TODO: Should be smart here in the future.
-        # For now simply remove alpha channel.
-        # with alpha
-        if img.ndim == 4:
+        elif img.ndim == 4:
             img = img[:, :, :3]
         
-        h, w, d = tuple(img.shape)
-        self.orig_h, self.orig_w, self.orig_d = tuple(img.shape)
-
         # Downsample for speed.
+        #
+        # NOTE: I can't find a good method to resize properly in Python!
+        # scipy.misc.imresize uses PIL, which needs 8bit data.
+        # Anyway, this is faster and almost as good.
         #
         # >>> def d(dim, max_dim): return arange(0, dim, dim / max_dim + 1).shape
         # >>> plot(range(1200), [d(x, 200) for x in range(1200)])
-        #
-        # NOTE: I'd like to resize properly, but cannot seem to find a good
-        # method for this in Python. scipy.misc.imresize uses PIL, which needs
-        # 8bit data. Anyway, this is faster and probably about as good.
+        h, w, d = tuple(img.shape)
+        self.orig_h, self.orig_w, self.orig_d = tuple(img.shape)
         h_stride = h / self.MAX_DIMENSION + 1
         w_stride = w / self.MAX_DIMENSION + 1
         img = img[::h_stride, ::w_stride, :]
 
+        # Convert to L*a*b colors.
         h, w, d = img.shape
         self.h, self.w, self.d = img.shape
-
-        # convert to Lab color space and reshape
         self.lab_array = rgb2lab(img).reshape((h * w, d))
 
     def as_dict(self):
         """
         Return relevant info about self in a dict.
         """
-        return {'url': self.url,
+        return {'id': self.id, 'url': self.url,
+                'resized_width': self.w, 'resized_height': self.h,
                 'width': self.orig_w, 'height': self.orig_h}
-    
-    def discard_data(self):
-        """
-        Drop the raw pixel data (useful when storing in an ImageCollection).
-        """
-        self.lab_array = None
 
     def output_quantized_to_palette(self, palette, filename):
         """
@@ -177,7 +90,6 @@ class Image(ColorObject):
         ----------
         palette : rayleigh.Palette
             Containing K colors.
-
         filename : string
             Where image will be written.
         """
