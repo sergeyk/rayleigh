@@ -19,7 +19,7 @@
           <div id="palette_search_form_sic_types">
             <h3>Algorithm</h3>
             {% for st in sic_types %}
-              <input type="radio" name="sic_type" value={{ st }} {{ checked(st) }}>{{ st }}<br />
+              <input type="radio" name="sic_type" value={{ st }} {{ 'checked' if st == sic_type else '' }}>{{ st }}<br />
             {% endfor %}
           </div>
           <input id="palette_search_form_submit" type="submit" value="Search" />
@@ -96,11 +96,11 @@
           //var onclick = sprintf('getSimilarImages(\'%s\'); return false;', id);
           //var a_similar = sprintf('<a href="#" onclick="%s">similar</a>', onclick);
           
-          var img = sprintf('<img src="%s" alt="%s" width="%s" height="%s" />',
-            [url, val['distance'], val['width']/4, val['height']/4]);
+          var img = sprintf('<img src="%s" alt="%.3f" width="%d" height="%d" />',
+            url, val['distance'], val['width']/2, val['height']/2);
           var links = [a_histogram, a_palette].join(' | ');
           
-          return sprintf('<div class="result">%s<br />%s</div>', [img, links])
+          return sprintf('<div class="result">%s<br />%s</div>', img, links)
         });
         $('#images').html(items.join(''));
       }

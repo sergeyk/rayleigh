@@ -90,15 +90,9 @@ class ImageCollection(object):
         """
         cPickle.dump(self, open(filename, 'w'), 2)
 
-    def get_hists(self, max_num=10000):
+    def get_hists(self):
         """
-        Return a representative sample of histograms of all images
-        as a single numpy array.
-
-        Parameters
-        ----------
-        max_num : int, optional
-            maximum number of images to return
+        Return histograms of all images as a single numpy array.
 
         Returns
         -------
@@ -106,23 +100,30 @@ class ImageCollection(object):
             where N is the number of images in the database and K is the number
             of colors in the palette.
         """
-        cursor = collection.find().limit(max_num)
+        # TODO: scale this to larger datasets by using PyTables
+        # http://www.pytables.org/moin/HowToUse
+        cursor = collection.find()
         return np.array([cPickle.loads(image['hist']) for image in cursor])
 
-    def get_image(self, image_id):
+    def get_image(self, image_id, no_hist=False):
         """
         Return information about the image at id, or None if it doesn't exist.
 
         Parameters
         ----------
         image_id : string
+        no_hist : boolean
+            If True, does not return the histogram, only the image metadata.
 
         Returns
         -------
         image : dict, or None
             information in database for this image id.
         """
-        results = collection.find({'id': image_id})
+        if no_hist:
+            results = collection.find({'id': image_id}, fields={'hist': False})
+        else:
+            results = collection.find({'id': image_id})
         if results.count() == 1:
             return results[0]
         elif results.count() == 0:

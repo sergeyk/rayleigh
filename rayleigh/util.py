@@ -202,24 +202,25 @@ def histogram_colors_smoothed(lab_array, palette, sigma=10,
     color_hist : (K,) ndarray
     """
     if direct:
-        color_hist_smooth = histogram_colors_smoothed(palette, lab_array, sigma)
+        color_hist_smooth = histogram_colors_with_smoothing(
+            lab_array, palette, sigma)
     else:
-        color_hist_strict = histogram_colors_strict(palette, lab_array)
-        color_hist_smooth = smooth_histogram(palette, color_hist_strict, sigma)
+        color_hist_strict = histogram_colors_strict(lab_array, palette)
+        color_hist_smooth = smooth_histogram(color_hist_strict, palette, sigma)
     if plot_filename is not None:
         plot_histogram(color_hist_smooth, palette, plot_filename)
     return color_hist_smooth
 
 
-def smooth_histogram(palette, color_hist, sigma=10):
+def smooth_histogram(color_hist, palette, sigma=10):
     """
     Smooth the given palette histogram with a Gaussian of variance sigma.
 
     Parameters
     ----------
+    color_hist : (K,) ndarray
     palette : rayleigh.Palette
         containing K colors.
-    color_hist : (K,) ndarray
 
     Returns
     -------
@@ -233,17 +234,17 @@ def smooth_histogram(palette, color_hist, sigma=10):
     return color_hist_smooth
 
 
-def histogram_colors_with_smoothing(palette, color_array, sigma=10):
+def histogram_colors_with_smoothing(lab_array, palette, sigma=10):
     """
     Assign colors in the image to nearby colors in the palette, weighted by
     distance in Lab color space.
 
     Parameters
     ----------
-    palette : rayleigh.Palette
-        containing K colors.
     lab_array (N,3) ndarray:
         N is the number of data points, columns are L, a, b values.
+    palette : rayleigh.Palette
+        containing K colors.
     sigma : float
         (0,1] value to control the steepness of exponential falloff.
         To see the effect:
@@ -261,7 +262,7 @@ def histogram_colors_with_smoothing(palette, color_array, sigma=10):
     color_hist : (K,) ndarray
         the normalized, smooth histogram of colors.
     """
-    dist = euclidean_distances(palette.lab_array, color_array, squared=True).T
+    dist = euclidean_distances(palette.lab_array, lab_array, squared=True).T
     n = 2. * sigma ** 2
     weights = np.exp(-dist / n)
     
@@ -272,6 +273,6 @@ def histogram_colors_with_smoothing(palette, color_array, sigma=10):
     normalized_weights = weights / normalizing[:, np.newaxis]
 
     color_hist = normalized_weights.sum(0)
-    color_hist /= color_array.shape[0]
+    color_hist /= lab_array.shape[0]
     color_hist[color_hist < 1e-5] = 0
     return color_hist

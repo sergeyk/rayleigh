@@ -54,7 +54,7 @@ class TestFlickrCollection(unittest.TestCase):
         with the rayleigh.assemble_flickr_dataset module.
         """
         # Parametrization of our test.
-        image_list_name = 'flickr_10K'
+        image_list_name = 'flickr_100K'
         num_images = int(1e5)
 
         dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))

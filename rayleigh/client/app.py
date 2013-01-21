@@ -30,10 +30,10 @@ Load the Searchable Image Collections that can be used to search.
 """
 sics = {
     'chi_square_exact_8': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/mirflickr_25K_exact_chi_square_8_0.pickle')),
+        repo_dirname, 'data/flickr_100K_exact_chi_square_8_0.pickle')),
 
     'chi_square_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/mirflickr_25K_exact_chi_square_16_0.pickle')),
+        repo_dirname, 'data/flickr_100K_exact_chi_square_16_0.pickle')),
     
     # 'chi_square_flann_8': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
     #     repo_dirname, 'data/mirflickr_25K_flann_chi_square_8_0.pickle'))
@@ -101,14 +101,9 @@ def parse_colors_and_values():
 def search_with_palette():
     sic_type = parse_sic_type()
     colors = parse_colors_and_values()
-
-    def checked(st):
-        return 'checked' if st == sic_type else ''
-    
     return render_template(
         'index.html',
-        sic_types=sics.keys(),
-        sic_type=sic_type, checked=checked,
+        sic_types=sics.keys(), sic_type=sic_type,
         colors=Markup(json.dumps(colors)))
 
 
@@ -118,13 +113,12 @@ def search_with_palette_json():
     colors = parse_colors_and_values()
     if colors is None:
         return make_json_response({'message': 'no request data'}, 400)
-
-    print(colors)
     pq = rayleigh.PaletteQuery(colors)
-    color_hist = pq.histogram_colors_smoothed(
-        sic.ic.palette, sigma=sigma, direct=False)
+    color_hist = util.histogram_colors_smoothed(
+        pq.lab_array, sic.ic.palette, sigma=sigma, direct=False)
     b64_hist = util.output_histogram_base64(color_hist, sic.ic.palette)
     results = sic.search_by_color_hist(color_hist, 80)
+    #from IPython import embed; embed()
     return make_json_response({'results': results, 'pq_hist': b64_hist})
 
 
