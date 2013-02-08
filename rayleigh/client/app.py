@@ -117,8 +117,9 @@ def search_by_palette_json(sic_type, sigma):
     color_hist = util.histogram_colors_smoothed(
         pq.lab_array, sic.ic.palette, sigma=sigma, direct=False)
     b64_hist = util.output_histogram_base64(color_hist, sic.ic.palette)
-    results = sic.search_by_color_hist(color_hist, 80)
-    return make_json_response({'results': results, 'pq_hist': b64_hist})
+    results, time_elapsed = sic.search_by_color_hist(color_hist, 80)
+    return make_json_response({
+        'results': results, 'time_elapsed': time_elapsed, 'pq_hist': b64_hist})
 
 
 @app.route('/search_by_image/<sic_type>/<image_id>')
@@ -135,8 +136,9 @@ def search_by_image(sic_type, image_id):
 @app.route('/search_by_image_json/<sic_type>/<image_id>')
 def search_by_image_json(sic_type, image_id):
     sic = sics[sic_type]
-    query_data, results = sic.search_by_image_in_dataset(image_id, 80)
-    return make_json_response({'results': results})
+    query_data, results, time_elapsed = sic.search_by_image_in_dataset(image_id, 80)
+    return make_json_response({
+        'results': results, 'time_elapsed': time_elapsed})
 
 
 @app.route('/image_histogram/<sic_type>/<image_id>.png')

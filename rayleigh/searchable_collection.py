@@ -118,8 +118,8 @@ class SearchableImageCollection(object):
         """
         query_img_data = self.ic.get_image(img_id, no_hist=True)
         color_hist = self.get_image_hist(img_id)
-        results = self.search_by_color_hist(color_hist, num, reduced=True)
-        return query_img_data, results
+        results, time_elapsed = self.search_by_color_hist(color_hist, num, reduced=True)
+        return query_img_data, results, time_elapsed
 
     def search_by_image(self, image_filename, num=20):
         """
@@ -131,7 +131,8 @@ class SearchableImageCollection(object):
         color_hist = util.histogram_colors_smoothed(
             query_img.lab_array, self.ic.palette,
             sigma=self.sigma, direct=False)
-        return query_img.as_dict(), self.search_by_color_hist(color_hist)
+        results, time_elapsed = self.search_by_color_hist(color_hist)
+        return query_img.as_dict(), results, time_elapsed
 
     def search_by_color_hist(self, color_hist, num=20, reduced=False):
         """
@@ -155,7 +156,9 @@ class SearchableImageCollection(object):
         """
         if self.num_dimensions > 0 and not reduced:
             color_hist = self.pca.transform(color_hist)
+        tt.tic('nn_ind')
         nn_ind, nn_dists = self.nn_ind(color_hist, num)
+        time_elapsed = tt.qtoc('nn_ind')
         results = []
         # TODO: tone up the amount of data returned: don't need resized size,
         # _id, maybe something else?
@@ -165,7 +168,7 @@ class SearchableImageCollection(object):
             img['url'] = cgi.escape(img['url'])
             img['distance'] = dist
             results.append(img)
-        return results
+        return results, time_elapsed
 
     @abc.abstractmethod
     def nn_ind(self, color_hist, num):

@@ -52,14 +52,11 @@ body {
   width: 1000px;
 }
 
-#images img {
-  margin: 2px;
-}
-
 div.result {
   display: inline-block;
+  margin: 5px;
 }
-.result a {
+.result {
   padding-top: -3px;
   font-size: 9px;
   text-decoration: none;
