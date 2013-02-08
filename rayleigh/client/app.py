@@ -34,41 +34,35 @@ sics = {
 
     'chi_square_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_chi_square_16_0.pickle')),
-    
+
+    'euclidean_exact_8': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_exact_euclidean_8_0.pickle')),
+
+    'euclidean_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_exact_euclidean_16_0.pickle')),
+
+    'manhattan_exact_8': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_exact_manhattan_8_0.pickle')),
+
+    'manhattan_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_exact_manhattan_16_0.pickle')),
+
     # 'chi_square_flann_8': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
     #     repo_dirname, 'data/mirflickr_25K_flann_chi_square_8_0.pickle'))
 }
-
-default_sic_type = "chi_square_exact_8"
+default_sic_type = "chi_square_exact_16"
 
 """
-Set the smoothing parameter applied to the color palette queries.
+Set the default smoothing parameter applied to the color palette queries.
 """
-sigma = 16
-
-
-@app.route('/sic_types')
-def sic_types():
-    return make_json_response(sics.keys())
+sigmas = [8, 16, 20]
+default_sigma = 16
 
 
 @app.route('/')
 def index():
-    return redirect(url_for('search_with_palette'))
-
-
-def parse_sic_type():
-    """
-    Parse the GET request string for the SIC type.
-
-    Returns
-    -------
-    sic_type : string
-    """
-    sic_type = request.args.get('sic_type', '')
-    if len(sic_type) < 1:
-        return default_sic_type
-    return sic_type
+    return redirect(url_for(
+        'search_by_palette', sic_type=default_sic_type, sigma=default_sigma))
 
 
 def parse_colors_and_values():
@@ -97,19 +91,25 @@ def parse_colors_and_values():
     return dict(zip(colors, values.tolist()))
 
 
-@app.route('/search_with_palette')
-def search_with_palette():
-    sic_type = parse_sic_type()
+@app.route('/search_by_palette')
+def search_by_palette_default():
+    return redirect(url_for(
+        'search_by_palette', sic_type=default_sic_type, sigma=default_sigma))
+
+
+@app.route('/search_by_palette/<sic_type>/<int:sigma>')
+def search_by_palette(sic_type, sigma):
     colors = parse_colors_and_values()
     return render_template(
-        'index.html',
-        sic_types=sics.keys(), sic_type=sic_type,
+        'search_by_palette.html',
+        sic_types=sorted(sics.keys()), sic_type=sic_type,
+        sigmas=sigmas, sigma=sigma,
         colors=Markup(json.dumps(colors)))
 
 
-@app.route('/search_with_palette_json')
-def search_with_palette_json():
-    sic = sics[parse_sic_type()]
+@app.route('/search_by_palette_json/<sic_type>/<int:sigma>')
+def search_by_palette_json(sic_type, sigma):
+    sic = sics[sic_type]
     colors = parse_colors_and_values()
     if colors is None:
         return make_json_response({'message': 'no request data'}, 400)
@@ -118,23 +118,39 @@ def search_with_palette_json():
         pq.lab_array, sic.ic.palette, sigma=sigma, direct=False)
     b64_hist = util.output_histogram_base64(color_hist, sic.ic.palette)
     results = sic.search_by_color_hist(color_hist, 80)
-    #from IPython import embed; embed()
     return make_json_response({'results': results, 'pq_hist': b64_hist})
 
 
-# TODO: add sigma parameter
-@app.route('/image_histogram/<image_id>.png')
-def get_image_histogram(image_id):
-    sic = sics[default_sic_type]
-    hist = sic.ic.hists[int(image_id), :]
+@app.route('/search_by_image/<sic_type>/<image_id>')
+def search_by_image(sic_type, image_id):
+    # TODO: don't rely on the two methods below in the template, but render
+    # images directly here.
+    image = sics[sic_type].ic.get_image(image_id, no_hist=True)
+    return render_template(
+        'search_by_image.html',
+        sic_types=sorted(sics.keys()), sic_type=sic_type,
+        image_url=image['url'], image_id=image_id)
+
+
+@app.route('/search_by_image_json/<sic_type>/<image_id>')
+def search_by_image_json(sic_type, image_id):
+    sic = sics[sic_type]
+    query_data, results = sic.search_by_image_in_dataset(image_id, 80)
+    return make_json_response({'results': results})
+
+
+@app.route('/image_histogram/<sic_type>/<image_id>.png')
+def get_image_histogram(sic_type, image_id):
+    sic = sics[sic_type]
+    hist = sic.get_image_hist(image_id)
     strIO = rayleigh.util.output_plot_for_flask(hist, sic.ic.palette)
     return send_file(strIO, mimetype='image/png')
 
 
-@app.route('/palette_image/<image_id>.png')
-def get_palette_image(image_id):
-    sic = sics[default_sic_type]
-    hist = sic.ic.hists[int(image_id), :]
+@app.route('/palette_image/<sic_type>/<image_id>.png')
+def get_palette_image(sic_type, image_id):
+    sic = sics[sic_type]
+    hist = sic.ic.get_image(image_id)['hist']
     img = rayleigh.util.color_hist_to_palette_image(hist, sic.ic.palette)
     strIO = StringIO.StringIO()
     imsave(strIO, img, plugin='pil', format_str='png')

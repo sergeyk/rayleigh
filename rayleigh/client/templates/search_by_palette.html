@@ -9,7 +9,7 @@
     <!-- The left sidebar: palette selection and histogram display. -->
     <div id="search_sidebar">
       <div id="palette_search">
-        <form id="palette_search_form" method="get" action="/search_with_palette">
+        <form id="palette_search_form" action='#'>
           <div id="palette_search_form_colors">
             <h3>Colors</h3>
             {% include 'palette.html' %}
@@ -17,9 +17,14 @@
             <!--<input type="hidden" id="palette_search_form_hidden_values" name="values" value="" />-->
           </div>
           <div id="palette_search_form_sic_types">
-            <h3>Algorithm</h3>
+            <h3>Search Method</h3>
             {% for st in sic_types %}
               <input type="radio" name="sic_type" value={{ st }} {{ 'checked' if st == sic_type else '' }}>{{ st }}<br />
+            {% endfor %}
+
+            <h3>Palette Smoothing</h3>
+            {% for s in sigmas %}
+              <input type="radio" name="sigma" value={{ s }} {{ 'checked' if s == sigma else '' }}>{{ s }}<br />
             {% endfor %}
           </div>
           <input id="palette_search_form_submit" type="submit" value="Search" />
@@ -48,8 +53,19 @@
     }
 
     $(document).ready(function() {
+      $('#palette_search_form').submit(function() {
+        var sic_type = $("#palette_search_form input[name='sic_type']:checked").val();
+        var sigma = $("#palette_search_form input[name='sigma']:checked").val();
+        var colors = $('#palette_search_form_hidden_colors').serialize();
+        var search_url = sprintf('/search_by_palette/%s/%s?%s',
+          sic_type, sigma, colors);
+        window.location = search_url;
+        return false;
+      });
+
       /* Prepare the color palette search form. */
       var sic_type = "{{ sic_type }}";
+      var sigma = "{{ sigma }}";
       var colors = {{ colors }} || {};
       colors_str = Object.keys(colors).join(',');
       $('#palette_search_form_hidden_colors').val(colors_str);
@@ -79,34 +95,14 @@
       /* Make the request for the palette query histogram and image results. */
       var display_results = function(json_data) {
         // Display palette query histogram.
-        var pq_hist = '<img width="90%" src="data:image/png;base64,' + json_data['pq_hist'] + '" >Test</img>';
+        var pq_hist = '<img width="90%" src="data:image/png;base64,' + json_data['pq_hist'] + '" />';
         $('#palette_query').html(pq_hist);
         
-        // Display image results.
-        var items = $.map(json_data['results'], function(val, i) {
-          var id = val['id'];
-          var url = val['url'];
-
-          var histogram_url = sprintf('/image_histogram/%s.png', id);
-          var a_histogram = sprintf('<a href="%s">histogram</a>', histogram_url);
-
-          var palette_url = sprintf('/palette_image/%s.png', id);
-          var a_palette = sprintf('<a href="%s">palette</a>', palette_url);
-          
-          //var onclick = sprintf('getSimilarImages(\'%s\'); return false;', id);
-          //var a_similar = sprintf('<a href="#" onclick="%s">similar</a>', onclick);
-          
-          var img = sprintf('<img src="%s" alt="%.3f" width="%d" height="%d" />',
-            url, val['distance'], val['width']/2, val['height']/2);
-          var links = [a_histogram, a_palette].join(' | ');
-          
-          return sprintf('<div class="result">%s<br />%s</div>', img, links)
-        });
-        $('#images').html(items.join(''));
+        {% include 'display_images.js' %}
       }
-      $.getJSON('/search_with_palette_json',
-        data = {
-            'sic_type': sic_type,
+      var search_url = sprintf(
+        '/search_by_palette_json/%s/%s', sic_type, sigma);
+      $.getJSON(search_url, data = {
             'colors': Object.keys(colors).join(',')},
         success=display_results);
     });

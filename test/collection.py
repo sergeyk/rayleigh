@@ -50,7 +50,7 @@ class TestSyntheticCollection(unittest.TestCase):
 class TestFlickrCollection(unittest.TestCase):
     def test_flickr(self):
         """
-        Load subset of the Flickr interestingness dataset that can be compiled
+        Load subset of the Flickr interestingness dataset that can be assembled
         with the rayleigh.assemble_flickr_dataset module.
         """
         # Parametrization of our test.

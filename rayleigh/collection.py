@@ -125,9 +125,14 @@ class ImageCollection(object):
         else:
             results = collection.find({'id': image_id})
         if results.count() == 1:
-            return results[0]
+            r = results[0]
+            if 'hist' in r:
+                r['hist'] = cPickle.loads(r['hist'])
+            return r
         elif results.count() == 0:
             return None
+        else:
+            raise("Should never be more than one result for the same id.")
 
     def get_id_ind_map(self):
         """

@@ -82,6 +82,22 @@ class SearchableImageCollection(object):
         self.hists_reduced = self.pca.transform(self.hists_reduced)
         tt.toc('reduce_dimensionality')
 
+    def get_image_hist(self, img_id):
+        """
+        Return the smoothed image histogram of the image with the given id.
+
+        Parameters
+        ----------
+        img_id : string
+
+        Returns
+        -------
+        color_hist : ndarray
+        """
+        img_ind = self.id_ind_map[img_id]
+        color_hist = self.hists_reduced[img_ind, :]
+        return color_hist
+
     def search_by_image_in_dataset(self, img_id, num=20):
         """
         Search images in database for similarity to the image with img_id in
@@ -101,9 +117,8 @@ class SearchableImageCollection(object):
             list of dicts of nearest neighbors to query
         """
         query_img_data = self.ic.get_image(img_id, no_hist=True)
-        img_ind = self.id_ind_map[img_id]
-        color_hist = self.hists_reduced[img_ind, :]
-        results = self.search_by_color_hist(color_hist, reduced=True)
+        color_hist = self.get_image_hist(img_id)
+        results = self.search_by_color_hist(color_hist, num, reduced=True)
         return query_img_data, results
 
     def search_by_image(self, image_filename, num=20):

@@ -96,7 +96,7 @@ def plot_histogram(color_hist, palette, plot_filename=None):
     Returns:
         - fig (Figure)
     """
-    fig = plt.figure(figsize=(5, 3), dpi=300)
+    fig = plt.figure(figsize=(5, 3), dpi=150)
     ax = fig.add_subplot(111)
     ax.bar(
         range(len(color_hist)), color_hist,
@@ -105,7 +105,7 @@ def plot_histogram(color_hist, palette, plot_filename=None):
     ax.xaxis.set_ticks([])
     ax.set_xlim((0, len(palette.hex_list)))
     if plot_filename:
-        fig.savefig(plot_filename, dpi=300, facecolor='none')
+        fig.savefig(plot_filename, dpi=150, facecolor='none')
     return fig
 
 
