@@ -15,7 +15,7 @@ import rayleigh.util as util
 
 app = Flask(__name__)
 app.debug = False  # TODO: make sure this is False in production
-app.debug = True
+#app.debug = True
 
 
 def make_json_response(body, status_code=200):
@@ -29,28 +29,34 @@ def make_json_response(body, status_code=200):
 Load the Searchable Image Collections that can be used to search.
 """
 sics = {
-    'chi_square_exact_8': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    'Chi-square, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_chi_square_8_0.pickle')),
 
-    'chi_square_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    'Chi-square, sigma=16, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_chi_square_16_0.pickle')),
 
-    'euclidean_exact_8': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    'Euclidean, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_euclidean_8_0.pickle')),
 
-    'euclidean_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    'Euclidean, sigma=16, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_euclidean_16_0.pickle')),
 
-    'manhattan_exact_8': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    'Manhattan, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_manhattan_8_0.pickle')),
 
-    'manhattan_exact_16': rayleigh.SearchableImageCollectionExact.load(os.path.join(
+    'Manhattan, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
         repo_dirname, 'data/flickr_100K_exact_manhattan_16_0.pickle')),
 
-    # 'chi_square_flann_8': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
-    #     repo_dirname, 'data/mirflickr_25K_flann_chi_square_8_0.pickle'))
+    'Euclidean, sigma=16, FLANN': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_flann_euclidean_16_0.pickle')),
+
+    'Manhattan, sigma=16, FLANN': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_flann_manhattan_16_0.pickle')),
+
+    'Chi-square, sigma=16, FLANN': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
+        repo_dirname, 'data/flickr_100K_flann_chi_square_16_0.pickle'))
 }
-default_sic_type = "chi_square_exact_16"
+default_sic_type = "Chi-square, sigma=16, Exact"
 
 """
 Set the default smoothing parameter applied to the color palette queries.

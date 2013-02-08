@@ -70,9 +70,6 @@ class TestFlickrCollection(unittest.TestCase):
         # Load the image collection.
         data_filename = os.path.join(repo_dirname, 'data', 'flickr_1M.json.gz')
         ids, urls = rayleigh.ids_and_urls_from_dataset(data_filename, num_images)
-        # import cPickle
-        # with open('temp.pickle') as f:
-        #     ids, urls = zip(*cPickle.load(f))
 
         ic_filename = os.path.join(
             temp_dirname, '{}.pickle'.format(image_list_name))
@@ -114,24 +111,24 @@ class TestFlickrCollection(unittest.TestCase):
 
         # there are 88 dimensions in our palette.
         modes = [
-            ('exact', 'euclidean', 8, 22),
-            ('exact', 'euclidean', 8, 0),
-            ('exact', 'euclidean', 16, 0),
+            # ('exact', 'euclidean', 8, 22),
+            # ('exact', 'euclidean', 8, 0),
+            # ('exact', 'euclidean', 16, 0),
 
-            ('exact', 'manhattan', 8, 22),
-            ('exact', 'manhattan', 8, 0),
-            ('exact', 'manhattan', 16, 0),
+            # ('exact', 'manhattan', 8, 22),
+            # ('exact', 'manhattan', 8, 0),
+            # ('exact', 'manhattan', 16, 0),
 
-            ('exact', 'chi_square', 8, 0),
-            ('exact', 'chi_square', 16, 0),
+            # ('exact', 'chi_square', 8, 0),
+            # ('exact', 'chi_square', 16, 0),
 
-            #('flann', 'euclidean', 8, 22),
-            #('flann', 'euclidean', 8, 0),
+            #('flann', 'euclidean', 16, 22),
+            ('flann', 'euclidean', 16, 0),
 
-            #('flann', 'manhattan', 8, 22),
-            #('flann', 'manhattan', 8, 0),
+            #('flann', 'manhattan', 16, 22),
+            ('flann', 'manhattan', 16, 0),
 
-            #('flann', 'chi_square', 8, 0),
+            ('flann', 'chi_square', 16, 0),
             
             #('ckdtree', 'euclidean', 8, 22),
             #('ckdtree', 'manhattan', 8, 22)

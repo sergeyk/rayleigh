@@ -70,7 +70,7 @@ class SearchableImageCollection(object):
         for i in range(self.hists_reduced.shape[0]):
             color_hist = self.hists_reduced[i, :]
             self.hists_reduced[i, :] = util.smooth_histogram(
-                self.ic.palette, color_hist, self.sigma)
+                color_hist, self.ic.palette, self.sigma)
 
     def reduce_dimensionality(self):
         """
