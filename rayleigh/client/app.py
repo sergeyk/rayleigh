@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import numpy as np
 import simplejson as json
 from bson import json_util
@@ -147,10 +150,33 @@ def search_by_image_json(sic_type, image_id):
         'results': results, 'time_elapsed': time_elapsed})
 
 
-@app.route('/image_histogram/<sic_type>/<image_id>.png')
-def get_image_histogram(sic_type, image_id):
+@app.route('/image_histogram/<sic_type>/<int:sigma>/<image_id>.png')
+def get_image_histogram(sic_type, sigma, image_id):
+    """
+    Return png of the image histogram.
+
+    Parameters
+    ----------
+    sic_type: string
+
+    sigma: int
+        If given as 0, return histogram as smoothed by the SIC.
+        If given as 1, return unsmoothed histogram.
+        If otherwise given, get the unsmoothed histogram and smooth manually.
+
+    image_id: string
+
+    Returns
+    -------
+    strIO: binary of a png file.
+    """
     sic = sics[sic_type]
-    hist = sic.get_image_hist(image_id)
+    if sigma == 0:
+        hist = sic.get_image_hist(image_id)
+    else:
+        hist = sic.ic.get_image(image_id)['hist']
+        if sigma != 1:
+            hist = util.smooth_histogram(hist, sic.ic.palette, sigma)
     strIO = rayleigh.util.output_plot_for_flask(hist, sic.ic.palette)
     return send_file(strIO, mimetype='image/png')
 

@@ -19,7 +19,7 @@
           <div id="palette_search_form_sic_types">
             <h3>Search Method</h3>
             {% for st in sic_types %}
-              <input type="radio" name="sic_type" value={{ st }} {{ 'checked' if st == sic_type else '' }}>{{ st }}<br />
+              <input type="radio" name="sic_type" value="{{ st }}" {{ 'checked' if st == sic_type else '' }}>{{ st }}<br />
             {% endfor %}
 
             <h3>Palette Smoothing</h3>
@@ -47,14 +47,15 @@
   <script src="/static/jquery-1.8.3.js"></script>
   <script src="/static/sprintf-0.7-beta1.js"></script>
   <script>
-    // Add a simple URL query string parser to jQuery.
-    $.urlParam = function (name){
-      var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
-      if (!results) { return 0; }
-      return results[1] || 0;
-    }
-
     $(document).ready(function() {
+      // Add a simple URL query string parser to jQuery.
+      $.urlParam = function (name){
+        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (!results) { return 0; }
+        return results[1] || 0;
+      }
+
+      // Add form submission JS.
       $('#palette_search_form').submit(function() {
         var sic_type = $("#palette_search_form input[name='sic_type']:checked").val();
         var sigma = $("#palette_search_form input[name='sigma']:checked").val();
@@ -65,7 +66,7 @@
         return false;
       });
 
-      /* Prepare the color palette search form. */
+      // Prepare the color palette search form.
       var sic_type = "{{ sic_type }}";
       var sigma = "{{ sigma }}";
       var colors = {{ colors }} || {};
@@ -94,19 +95,19 @@
         el.onclick = toggleSelected;
       });
 
-      /* Make the request for the palette query histogram and image results. */
+      // Make the request for the palette query histogram and image results.
       var display_results = function(json_data) {
-        // Display palette query histogram.
-        var pq_hist = '<img width="90%" src="data:image/png;base64,' + json_data['pq_hist'] + '" />';
-        $('#palette_query').html(pq_hist);
-        
+        // note: sprintf does not work in the below line
+        $('#palette_query').html(
+          '<img width="240px" src="data:image/png;base64,' + json_data['pq_hist'] + '" />'
+        );
         {% include 'display_images.js' %}
       }
       var search_url = sprintf(
         '/search_by_palette_json/%s/%s', sic_type, sigma);
       $.getJSON(search_url, data = {
-            'colors': Object.keys(colors).join(',')},
-        success=display_results);
+          'colors': Object.keys(colors).join(',')},
+          success=display_results);
     });
   </script>
 </body>

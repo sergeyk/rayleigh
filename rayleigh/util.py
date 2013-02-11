@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import tempfile
-import cStringIO as StringIO
 import matplotlib.pyplot as plt
+import cStringIO as StringIO
 from sklearn.metrics import euclidean_distances
 from skimage.io import imsave
 
@@ -41,7 +41,7 @@ def color_hist_to_palette_image(color_hist, palette, percentile=90,
     color_hist : (K,) ndarray
     palette : rayleigh.Palette
     percentile : int, optional:
-        Output only colors above this percentile of prevalence in the image.
+        Output only colors above this percentile of prevalence in the histogram.
     filename : string, optional:
         If given, save the resulting image to file.
 
@@ -251,10 +251,13 @@ def histogram_colors_with_smoothing(lab_array, palette, sigma=10):
 
     >>> from pylab import *
     >>> ds = linspace(0,5000) # squared distance
-    >>> sigma=10; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
-    >>> sigma=20; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
-    >>> sigma=40; plot(ds, exp(-ds/(2*sigma**2)), label='\sigma=%.1f'%sigma)
-    >>> ylim([0,1]); legend()
+    >>> sigma=10; plot(ds, exp(-ds/(2*sigma**2)), label='$\sigma=%.1f$'%sigma)
+    >>> sigma=20; plot(ds, exp(-ds/(2*sigma**2)), label='$\sigma=%.1f$'%sigma)
+    >>> sigma=40; plot(ds, exp(-ds/(2*sigma**2)), label='$\sigma=%.1f$'%sigma)
+    >>> ylim([0,1]); legend();
+    >>> xlabel('Squared distance'); ylabel('Weight');
+    >>> title('Exponential smoothing')
+    >>> #plt.savefig('exponential_smoothing.png', dpi=300)
 
         sigma=20 seems reasonable: hits 0 around squared distance of 4000.
 

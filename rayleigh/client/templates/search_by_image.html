@@ -13,20 +13,25 @@
       <form id="search_form" action='#'>
         <h3>Search Method</h3>
         {% for st in sic_types %}
-          <input type="radio" name="sic_type" value={{ st }} {{ 'checked' if st == sic_type else '' }}>{{ st }}<br />
+          <input type="radio" name="sic_type" value="{{ st }}" {{ 'checked' if st == sic_type else '' }}>{{ st }}<br />
         {% endfor %}
-        <input id="palette_search_form_submit" type="submit" value="Search" />
+        <input id="search_form_submit" type="submit" value="Search" />
       </form>
       
       <hr />
       <div id="histogram">
-        <h3>Image histogram</h3>
-        <img width="90%" src="/image_histogram/{{ sic_type }}/{{ image_id }}.png" />
+        <h3>Smoothed histogram</h3>
+        <img width="240px" src="/image_histogram/{{ sic_type }}/0/{{ image_id }}.png" />
+      </div>
+
+      <div id="raw-histogram">
+        <h3>Raw histogram</h3>
+        <img width="240px" src="/image_histogram/{{ sic_type }}/1/{{ image_id }}.png" />
       </div>
 
       <div id="palette_image">
         <h3>Palette image</h3>
-        <img width="90%" src="/palette_image/{{ sic_type }}/{{ image_id }}.png" />
+        <img width="240px" src="/palette_image/{{ sic_type }}/{{ image_id }}.png" />
       </div>
 
       <hr />
