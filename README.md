@@ -31,15 +31,13 @@ The documentation of the modules is generated from method docstrings and hosted 
 
 All planned and completed work is documented in a public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276).
 
-![Rayleigh in the search-by-palette view.][]
-
-[Rayleigh in the search-by-palette view.]: /Users/sergeyk/work/rayleigh/doc/images/black_yellow.png "" width=640px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/black_yellow.png" width="640px" /><br />
+Rayleigh in the search-by-palette view.
 
 ---
 
-![Rayleigh in the search-by-image view.][]
-
-[Rayleigh in the search-by-image view.]: /Users/sergeyk/work/rayleigh/doc/images/image_similarity.png "" width=640px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/image_similarity.png" width="640px" /><br />
+Rayleigh in the search-by-image view.
 
 ---
 
@@ -94,9 +92,8 @@ Rods respond only to intensity of light, not its color, and are far more numerou
 Cones have three distinct types ('S', 'M', 'L'), each responding strongest to a specific wavelength of light.
 Our perception of color is derived from the response rates of the photoreceptors, as well as our experience with colors and expectations.
 
-![Human retinal cell response curves. Image from Wikimedia Commons.][]
-
-[Human retinal cell response curves. Image from Wikimedia Commons.]: http://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Cone-response.svg/500px-Cone-response.svg.png "" width=320px
+<img src="http://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Cone-response.svg/500px-Cone-response.svg.png" width="320px" /><br />
+Human retinal cell response curves. Image from Wikimedia Commons.
 
 ### RGB color space
 
@@ -109,9 +106,8 @@ The RGB system can be thought of as describing a three dimensional space, with t
 A point in that space, given by the three coordinates, is a color.
 We can begin to think of distances between colors in this way, as a distance in 3D space between two points.
 
-![RGB Color Cube. Image from Wikimedia Commons.][]
-
-[RGB Color Cube. Image from Wikimedia Commons.]: http://upload.wikimedia.org/wikipedia/commons/thumb/8/83/RGB_Cube_Show_lowgamma_cutout_b.png/320px-RGB_Cube_Show_lowgamma_cutout_b.png "" width=320px
+<img src="http://upload.wikimedia.org/wikipedia/commons/thumb/8/83/RGB_Cube_Show_lowgamma_cutout_b.png/320px-RGB_Cube_Show_lowgamma_cutout_b.png" width="320px" /><br />
+RGB Color Cube. Image from Wikimedia Commons.
 
 ### HSV color space
 
@@ -127,9 +123,8 @@ A given hue can be imagined as more vibrant than baseline---deep red, midnight b
 The Hue-Saturation-Value color space is informed by this mental model, and strives to have one dimension corresponding to our intuitive notion of hue, and two dimensions which set the vibrancy and lightness.
 A point in HSV space is therefore more easily interpretable than a point in RGB space.
 
-![HSV Color Cone. Image from Wikimedia Commons.][]
-
-[HSV Color Cone. Image from Wikimedia Commons.]: http://upload.wikimedia.org/wikipedia/commons/f/f1/HSV_cone.jpg "" width=320px
+<img src="http://upload.wikimedia.org/wikipedia/commons/f/f1/HSV_cone.jpg" width="320px" /><br />
+HSV Color Cone. Image from Wikimedia Commons.
 
 ### Perceptually uniform color spaces
 
@@ -146,9 +141,8 @@ The opponent colors have no in-between point: we can imagine a point between blu
 
 In the L\*a*b\* space, simple Euclidean distance (\\(\sqrt{L^2 + a^2 + b^2}\\) between two colors, which corresponds to the intuitive notion of a distance between 3D points, is a good approximation to perceptual judgements of their difference.
 
-![CIELab color space. Image from couleur.org.][]
-
-[CIELab color space. Image from couleur.org.]: http://www.couleur.org/spaces/Labspace.jpg "" width=320px
+<img src="http://www.couleur.org/spaces/Labspace.jpg" width="320px" /><br />
+CIELab color space. Image from couleur.org.
 
 ## Representing Multiple Colors
 
@@ -162,9 +156,8 @@ To construct the histogram, for each color in the palette we find the percentage
 
 We can represent this information in a slightly different way, by showing the top colors present in the image in a type of "palette image", with the area of a color in the palette image proportional to the prevalence of that color in the image.
 
-![Example of four images, their raw color histograms, and their "palette images."][]
-
-[Example of four images, their raw color histograms, and their "palette images."]: /Users/sergeyk/work/rayleigh/doc/images/examples1.png "" width=800px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px" /><br />
+Example of four images, their raw color histograms, and their "palette images."
 
 ### Similarity of color content
 
@@ -179,9 +172,8 @@ The entirety of the sky seems to be in mostly two colors: a specific shade of ye
 But what if another image of a sunset, very similar to us perceptually, has two colors that are just slightly different?
 The histogram may in fact have no overlap at all then.
 
-![An example of two images that are very similar perceptually having different raw histograms.][]
-
-[An example of two images that are very similar perceptually having different raw histograms.]: /Users/sergeyk/work/rayleigh/doc/images/smoothing.png "" width=640px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/smoothing.png" width="640px" /><br />
+An example of two images that are very similar perceptually having different raw histograms.
 
 ### Smoothing histograms
 
@@ -190,19 +182,14 @@ Note that the smoothed histograms look practically the same for the two images, 
 
 Therefore, our searchable representation of images will be in smoothed histograms.
 
-![ ][]
-
-[ ]: /Users/sergeyk/work/rayleigh/doc/images/examples1.png "" width=800px
-
-![Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.][]
-
-[Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.]: /Users/sergeyk/work/rayleigh/doc/images/examples2.png "" width=800px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px" /><br />
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples2.png" width="800px" /><br />
+Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.
 
 We smooth histograms with a Gaussian kernel, with a parameter \\(\sigma\\) controlling the amount of smoothing.
 
-![Effect of sigma on the amount of smoothing.][]
-
-[Effect of sigma on the amount of smoothing.]: /Users/sergeyk/work/rayleigh/doc/images/exponential_smoothing.png "" width=320px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/exponential_smoothing.png" width="320px" /><br />
+Effect of sigma on the amount of smoothing.
 
 Rayleigh offers a choice of a couple of settings of the sigma parameter.
 
@@ -236,17 +223,15 @@ My solution was to use the HSV color space and create a grid of colors by
     3. An additional K-1 variations by decreasing both saturation and lightness.
 3. Add as many grayscale levels as there are variations, as the last column.
 
-![Palette of 8 hues and 2 variations][]
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_8_2.png" width="200px" /><br />
+Palette of 8 hues and 2 variations.
 
-[Palette of 8 hues and 2 variations]: /Users/sergeyk/work/rayleigh/doc/images/palette_8_2.png "" width=240px
-
-![Palette of 14 hues and 3 variations][]
-
-[Palette of 14 hues and 3 variations]: /Users/sergeyk/work/rayleigh/doc/images/palette_14_3.png "" width=320px
+<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_14_3.png" width="320px" /><br />
+Palette of 14 hues and 3 variations.
 
 <!--
 from skimage.io import imread, imshow, imsave
-im = imread('/Users/sergeyk/work/rayleigh/doc/images/palette_14_3.png')
+im = imread('http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_14_3.png')
 imsave('temp.png', scipy.misc.imresize(im, np.array(im.shape[:2])*50, interp='nearest'))
 -->
 
