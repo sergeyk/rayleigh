@@ -1,0 +1,7 @@
+numpy
+numpydoc
+scikits-image
+scikit-learn
+flask
+pymongo
+simplejson

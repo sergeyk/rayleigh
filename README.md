@@ -27,7 +27,7 @@ This writeup covers:
 1. results
 1. next steps
 
-The documentation of the modules is generated from method docstrings and hosted by [ReadTheDocs](#).
+The documentation of the modules is generated from method docstrings and hosted by [ReadTheDocs](https://rayleigh.readthedocs.org/en/latest/).
 
 All planned and completed work is documented in a public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276).
 
@@ -282,18 +282,26 @@ Parameters are tuned such that the index is fast but can return inexact results.
 
 We found that FLANN performs very well; since it includes kd trees, we did not extensively experiment with the cKDTree.
 
-## Results
+## System Architecture & Results
 
-Please use the [demo](http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com) and draw your own conclusions.
+The separation of concerns of our application are:
+
+- ImageCollection and SearchableImageCollection process images and construct index.
+
+- Flask web app provides a REST interface to the SearchableImageCollection and some utility methods, such as plotting color histograms.
+
+- HTML/JS UI is output by Flask, which fills in some things on the server side, but the search results are fetched with a separate AJAX call, to provide easy extension to loading multiple pages of results in a scrolling interface.
+
+Please use the [demo](http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com) and play around with different settings and color queries.
 
 I would appreciate suggestions on how to effectively display a summary of results here.
 
 ## Next Steps
 
-- In constructing a histogram, weighing pixels by visual saliency, with illustration of problem.
+- In constructing a histogram, weigh pixels by visual saliency. Often, the colors we perceive as important in the image actually do not take up much area and so are not well represented in the image histogram.
 
-- UI for adjusting percentages of each color.
+- Provide UI for adjusting percentages of each color in the palette query. No backend work is needed.
 
 - How to represent "do-not-care" colors?
 
-- Hard-limit re-normalization of the color histograms: cut off normalized histogram mass above some threshold, and re-normalize. This is a trick used in constructing the [SIFT descriptor](http://en.wikipedia.org/wiki/Scale-invariant_feature_transform#Keypoint_descriptor), for example.
+- Threshold-and-re-normalize the color histograms: cut off normalized histogram mass above some threshold, and re-normalize. This is a trick used in constructing the [SIFT descriptor](http://en.wikipedia.org/wiki/Scale-invariant_feature_transform#Keypoint_descriptor), for example.
