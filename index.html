@@ -28,32 +28,299 @@
         </ul>
       </header>
       <section>
-        <h3>Welcome to GitHub Pages.</h3>
+        <h1>Rayleigh: search images by multiple colors</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>We present an open-source system (<a href="http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com">demo website</a>) for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<p>The high-level concept is that images are represented as histograms over a fixed palette of colors in CIELab space.
+Sets of colors used for searching are similarly represented as histograms.
+The similarity of images to other images and to a query set of colors is formulated in terms of distance between histograms.
+To allow robust matching, the histograms are smoothed.</p>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<h3>System components</h3>
 
-<h3>Designer Templates</h3>
+<ul>
+<li><p>The back end processes image URLs to extract color information to store in a searchable database.</p></li>
+<li><p>The web server provides REST access to the back end.</p></li>
+<li><p>The client provides the UI for selecting a color palette to search with, or an image, and requests data from the web server.</p></li>
+</ul><h3>Documentation</h3>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>This writeup covers:</p>
 
-<h3>Rather Drive Stick?</h3>
+<ol>
+<li>prior art</li>
+<li>color perception and color spaces</li>
+<li>histogram representation of an image or a palette</li>
+<li>constructing a palette</li>
+<li>architecture of the working system</li>
+<li>results</li>
+<li>next steps</li>
+</ol><p>The documentation of the modules is generated from method docstrings and hosted by <a href="https://rayleigh.readthedocs.org/en/latest/">ReadTheDocs</a>.</p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>All planned and completed work is documented in a public <a href="https://trello.com/board/rayleigh/50d36a9e0f87f42952000276">Trello</a>.</p>
 
-<h3>Authors and Contributors</h3>
+<p><img src="doc/images/black_yellow.png" width="640px"><br>
+Rayleigh in the search-by-palette view.</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<hr><p><img src="doc/images/image_similarity.png" width="640px"><br>
+Rayleigh in the search-by-image view.</p>
 
-<h3>Support or Contact</h3>
+<hr><h2>Prior Art</h2>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p>The Content-Based Image Retrieval (CBIR) field has done much work on image similarity in the past couple of decades.
+My brief impression of the field is that color similarity was initially seen as proxy for general visual similarity, not an end to itself.
+Later research has focused more on closing the "semantic gap" in terms of nouns and verbs.</p>
+
+<p>I was able to find two implementations of a multi-color search engine, both closed-source:</p>
+
+<ul>
+<li><p>the excellent <a href="http://labs.tineye.com/multicolr">Idee Labs Multicolr Search</a>, a rather expensive commercial service;</p></li>
+<li><p>an experiment called <a href="http://chromatik.labs.exalead.com/">Chromatik</a>.</p></li>
+</ul><p>There is an open-source project on top of Apache Lucene for general image retrieval, called <a href="http://www.semanticmetadata.net/wiki/doku.php?id=lire:lire">Lire</a>; I have not tried it.</p>
+
+<p>Additionally, a simple open-source implementation of a single-color search was useful to see, thanks to <a href="http://99designs.com/tech-blog/blog/2012/08/02/color-explorer/">99designs</a>.</p>
+
+<h2>Perception of Color</h2>
+
+<p>All visual perception is highly complex.
+As countless optical illusions show,</p>
+
+<ul>
+<li>we perceive objects of the same actual size in the image as being <a href="http://www.illusionspoint.com/wp-content/uploads/2010/09/relative-size-optical-illusion-21.jpg">different sizes</a>;</li>
+<li>we see lines where there <a href="http://i.telegraph.co.uk/multimedia/archive/01121/300px-kanizsa-tria_1121094i.jpg">aren't any</a>;</li>
+<li>and most relevantly for this project, we see things that are the same color in the image as being <a href="http://brainden.com/color-illusions.htm">different colors</a>.</li>
+</ul><p>To get a machine to "see" the illusory contour of the triangle in the second example is an unsolved problem in practice.
+If we were developing a system to search images by shape, we would struggle to return the Kanizsa Triangle above as a result for "triangle."</p>
+
+<p>So it is with color.</p>
+
+<ul>
+<li><p>As artists have <a href="http://www.amazon.com/Interaction-Color-Revised-Josef-Albers/dp/0300018460">long understood</a>, how we see a color depends on what other colors are around it.</p></li>
+<li><p>As in the linked illusions above, the same color values in an image can be perceived as two different colors.</p></li>
+<li><p>Or conversely, we may perceive an object as being the same color in different images where its actual color is different (for example, you perceive your face to be the same color in an outdoors photograph, bathroom mirror, fluorescent office, and in the darkness of evening).</p></li>
+<li><p>On top of all this, there is a layer of language on top of all this mess:
+different languages deliniate colors in slightly different ways (for example, Russian has two distinct colors of "blue"), and it has been shown that it actually <a href="http://boingboing.net/2011/08/12/how-language-affects-color-perception.html">affects color perception</a>.</p></li>
+</ul><h2>Representing Color</h2>
+
+<p>So the problem of searching images by color is hard, but we will still attempt it.
+How should we represent "color" in the search engine?</p>
+
+<h3>Human eye</h3>
+
+<p>In our eyes, there are two types of photorceptive cells: rods and cones.
+Rods respond only to intensity of light, not its color, and are far more numerous.
+Cones have three distinct types ('S', 'M', 'L'), each responding strongest to a specific wavelength of light.
+Our perception of color is derived from the response rates of the photoreceptors, as well as our experience with colors and expectations.</p>
+
+<p><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Cone-response.svg/500px-Cone-response.svg.png" width="320px"><br>
+Human retinal cell response curves. Image from Wikimedia Commons.</p>
+
+<h3>RGB color space</h3>
+
+<p>On your computer, color is represented as three values, representing intensity of three color channels: red, green, and blue.
+The pixels in the display are composed of these three basic lights.
+When all are fully on, the color is white; when all are off, the color is black.
+All of the millions of colors that a modern computer is able to display come from mixing the three intensities.</p>
+
+<p>The RGB system can be thought of as describing a three dimensional space, with the Red, Green, and Blue dimensions.
+A point in that space, given by the three coordinates, is a color.
+We can begin to think of distances between colors in this way, as a distance in 3D space between two points.</p>
+
+<p><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/8/83/RGB_Cube_Show_lowgamma_cutout_b.png/320px-RGB_Cube_Show_lowgamma_cutout_b.png" width="320px"><br>
+RGB Color Cube. Image from Wikimedia Commons.</p>
+
+<h3>HSV color space</h3>
+
+<p>An additive mixture of three distinct colors does not match our intutive model of how color works: we can't easily visualize the effect of adding red, green, or blue to a color.</p>
+
+<p>Additionally, the distances in RGB spaces do not match up to perceptual judgements.
+That is, a color may be quite far away from another one in terms of RGB coordinates, but humans will judge the two colors as quite similar.
+Or the other way: two colors may <em>look</em> very different but be close together in RGB space.</p>
+
+<p>The rainbow is what we usually visualize when we think of color: hues of the visible spectrum from the almost-infrared to the almost-ultraviolet, roughly divided into less than a dozen words.
+A given hue can be imagined as more vibrant than baseline---deep red, midnight blue---or as more pastel-like---pink lipstick, robin's egg blue.</p>
+
+<p>The Hue-Saturation-Value color space is informed by this mental model, and strives to have one dimension corresponding to our intuitive notion of hue, and two dimensions which set the vibrancy and lightness.
+A point in HSV space is therefore more easily interpretable than a point in RGB space.</p>
+
+<p><img src="http://upload.wikimedia.org/wikipedia/commons/f/f1/HSV_cone.jpg" width="320px"><br>
+HSV Color Cone. Image from Wikimedia Commons.</p>
+
+<h3>Perceptually uniform color spaces</h3>
+
+<p>Although it better matches our mental model of color, HSV space still suffers from a misalignment of perceptual judgements to 3D distance of colors.</p>
+
+<p>The international standards agency has formulated an alternative color space with the explicit goal of making distances in the color space correspond to human judgments of color similarity.
+Actually, it couldn't decide between two: CIELab and CIELuv.</p>
+
+<p>CIELab, roughly, is formed by an oval with two axes: a and b, which correspond to the "opponent" colors of Yellow-Blue and Red-Green.
+The third dimension of L*a*b* space is lightness, which is approximately self-describing.</p>
+
+<p>As an aside, the "opponent" colors are so named because of the <a href="http://en.wikipedia.org/wiki/Opponent_process">opponent process</a> theory, which posits that color perception comes not from the asbolute values but from the <em>difference</em> in activation rates of the three types of cones in the retina.
+The opponent colors have no in-between point: we can imagine a point between blue and red, but not between blue and yellow; between red and yellow, but not between red and green; and so on.</p>
+
+<p>In the L*a*b* space, simple Euclidean distance (\(\sqrt{L^2 + a^2 + b^2}\) between two colors, which corresponds to the intuitive notion of a distance between 3D points, is a good approximation to perceptual judgements of their difference.</p>
+
+<p><img src="http://www.couleur.org/spaces/Labspace.jpg" width="320px"><br>
+CIELab color space. Image from couleur.org.</p>
+
+<h2>Representing Multiple Colors</h2>
+
+<p>At this point, we understand that we should use the CIELab space to represent colors as 3D points, and can treat distances between them as corresponding to perceptual judgements.</p>
+
+<p>But how do we represent a whole image, composed of many colors?</p>
+
+<p>Our solution is to introduce a canonical <em>palette</em> of colors: a small set of colors that approximately cover the color space.
+The color content of any image can then be represented as a histogram over the palette colors.
+To construct the histogram, for each color in the palette we find the percentage of pixels in the image that are <em>nearest</em> (in terms of Euclidean distance) to that color.</p>
+
+<p>We can represent this information in a slightly different way, by showing the top colors present in the image in a type of "palette image", with the area of a color in the palette image proportional to the prevalence of that color in the image.</p>
+
+<p><img src="doc/images/examples1.png" width="800px"><br>
+Example of four images, their raw color histograms, and their "palette images."</p>
+
+<h3>Similarity of color content</h3>
+
+<p>As described, we can represent the color content of an image with a histogram over a fixed palette, and note that images with similar color content should have similar histograms.</p>
+
+<p>A natural measure of similarity between histograms is the amount of overlap.
+Imagine superimposing one histogram on another; the areas that intersect form the overlap.</p>
+
+<p>Now look at the third image above, of a sunset over dark hills.
+The entirety of the sky seems to be in mostly two colors: a specific shade of yellow and a specific shade of light orange.</p>
+
+<p>But what if another image of a sunset, very similar to us perceptually, has two colors that are just slightly different?
+The histogram may in fact have no overlap at all then.</p>
+
+<p><img src="doc/images/smoothing.png" width="640px"><br>
+An example of two images that are very similar perceptually having different raw histograms.</p>
+
+<h3>Smoothing histograms</h3>
+
+<p>The solution, as shown in the figure above, is to <em>smooth</em> the histograms---intuitively, spread the content of bins to nearby bins.
+Note that the smoothed histograms look practically the same for the two images, even though the unsmoothed histograms have almost no overlap.</p>
+
+<p>Therefore, our searchable representation of images will be in smoothed histograms.</p>
+
+<p><img src="doc/images/examples1.png" width="800px"><br><img src="doc/images/examples2.png" width="800px"><br>
+Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.</p>
+
+<p>We smooth histograms with a Gaussian kernel, with a parameter \(\sigma\) controlling the amount of smoothing.</p>
+
+<p><img src="doc/images/exponential_smoothing.png" width="320px"><br>
+Effect of sigma on the amount of smoothing.</p>
+
+<p>Rayleigh offers a choice of a couple of settings of the sigma parameter.</p>
+
+<h3>Histogram distance metrics</h3>
+
+<p>How should we measure the distance between two color histograms?</p>
+
+<p>Let's say our canonical color palette has \(K\) colors.
+The histogram over those colors can be thought of as a point (or vector) in \(K\)-dimensional space, with the value of dimension \(k\) corresponding to the amount of the \(k\)'th color of the palette in the image histogram.</p>
+
+<p><strong>Euclidean</strong> or \(L_2\) distance between two histograms \(H\) and \(H'\) is simply \(\sqrt{\sum_{i=1}^K (H_i-H'_i)^2}\) and corresponds to the intuitive notion of distance between the two vectors in \(K\)-dimensional space.
+The calculation of this distance is quite fast due to its possible implementation as simple dot product, for which there are very fast system-level libraries.</p>
+
+<p>A similar metric is <strong>Manhattan</strong> or \(L_1\) distance, which is simply \(\sum_{i=1}^K \left|H_i-H'_i\right|\).
+A better distance metric for histograms is <strong>Chi-squared</strong> distance: \(\sum_{i=1}^K \frac{(H_i - H'_i)^2}{H_i + H'_i}\), or the <strong>histogram intersection</strong> distance: \(\sum_{i=1}^K \min(H_i, H'_i)\).</p>
+
+<p>Rayleigh offers a choice between the first three distances.</p>
+
+<h2>Forming the Palette</h2>
+
+<p>Recall that before we could represent an image as a histogram, we had to decide on the canonical colors of the histogram.
+The palette should reasonably cover the space of all possible colors, and, as it will be used as part of the search-by-palette UI, should appear intuitively "correct."</p>
+
+<p>Representing the 3D space of colors in two dimensions is a problem that has no fully correct solution.
+My solution was to use the HSV color space and create a grid of colors by</p>
+
+<ol>
+<li>picking N hues such that they span the 360 degrees of the color wheel, and presenting them as the middle row of the grid with full saturation and value.</li>
+<li>for each hue, offering
+
+<ol>
+<li>K variations by decreasing saturation</li>
+<li>K variations by decreasing lightness</li>
+<li>An additional K-1 variations by decreasing both saturation and lightness.</li>
+</ol>
+</li>
+<li>Add as many grayscale levels as there are variations, as the last column.</li>
+</ol><p><img src="doc/images/palette_8_2.png" width="200px"><br>
+Palette of 8 hues and 2 variations.</p>
+
+<p><img src="doc/images/palette_14_3.png" width="320px"><br>
+Palette of 14 hues and 3 variations.</p>
+
+
+
+<h2>Constructing the dataset</h2>
+
+<p>All the components are now in place to construct a system that allows searching a large number of images by multiple colors, or by color similarity to another image.</p>
+
+<p>We use the Flickr API to construct a large set of images.
+A <a href="http://www.flickr.com/services/api/flickr.interestingness.getList.html">particular API call</a> returns up to 500 most "interesting" images, as judged by an internal Flickr algorithm that is based on user actions such as Favorites, comments, and addition to sets for a given date.
+We assemble a set of a million images using such calls (code is provided in this repository).</p>
+
+<h2>Searching</h2>
+
+<p>Downloading and processing a million images is not trivial.
+The images are loaded in parallel into a MongoDB database.
+For each image, a raw histogram over the canonical color palette is computed and stored alongside image dimensions, url, and Flickr ID.
+The pixel data is not stored, as we do not seek to replicate Flickr's data but point to it.</p>
+
+<p>A searchable colection is formed from this data by loading all the raw histograms into a big matrix and smoothing them with a given parameter sigma.
+The matrix forms the basis for the <em>Exact</em> search mode, where distances from the query to all images in the dataset are computed and the top K results are returned.</p>
+
+<p>Rayleigh's color palette consists of \(D=88\) colors, and the current production version has \(N=100K\) images loaded.
+This matrix easily fits in memory of even a basic computer, and so we can ignore disk seek effects and correctly estimate the cost of exact search as \(O(DN)\), as we have to look at all histograms and compute at least a dot product with each one.</p>
+
+<p>There are two ways to speed this up:</p>
+
+<ol>
+<li>Reduce the dimensionality of the data \(D\)</li>
+<li>Provide an efficient index to the data; accept potentially inexact results.</li>
+</ol><h3>Dimensionality reduction</h3>
+
+<p>This speed-up does not yield us much, as the dimensionality of our data is already quite low.
+Nevertheless, Rayleigh implements PCA-based dimensionality reduction that works quite well if you'd like to experiment with larger palettes.
+An interesting question that I haven't looked at is what the PCA-reduced L*a*b* colors look like.</p>
+
+<h3>Indexing</h3>
+
+<p>A better approach is to construct an index to the data, such that we can quickly find all data points that have low distance to the query data point, without having to look through the entire dataset.</p>
+
+<p>In addition to the Exact method above, Rayleigh implements SearchableImageCollection's using two packages.</p>
+
+<p><a href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html"><strong>cKDTree</strong></a> implements a standard data structure for such indexing tasks: the KD Tree, which splits the data in two, one dimension at a time, such that a group of nearest neighbors can quickly be found for a query.</p>
+
+<p><a href="http://www.cs.ubc.ca/%7Emariusm/index.php/FLANN/FLANN"><strong>Fast Library for Approximate Nearest Neighbors</strong></a> is solidly-developed research code that is used and partially developed by the impressive <a href="http://www.pointclouds.org">Point Cloud Library</a> project.</p>
+
+<p>The basic idea is automatic parameter tuning and comparison of two different methods for indexing data: multiple KD trees and hierarchical k-means.
+Parameters are tuned such that the index is fast but can return inexact results.</p>
+
+<p>We found that FLANN performs very well; since it includes kd trees, we did not extensively experiment with the cKDTree.</p>
+
+<h2>System Architecture &amp; Results</h2>
+
+<p>The separation of concerns of our application are:</p>
+
+<ul>
+<li><p>ImageCollection and SearchableImageCollection process images and construct index.</p></li>
+<li><p>Flask web app provides a REST interface to the SearchableImageCollection and some utility methods, such as plotting color histograms.</p></li>
+<li><p>HTML/JS UI is output by Flask, which fills in some things on the server side, but the search results are fetched with a separate AJAX call, to provide easy extension to loading multiple pages of results in a scrolling interface.</p></li>
+</ul><p>Please use the <a href="http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com">demo</a> and play around with different settings and color queries.</p>
+
+<p>I would appreciate suggestions on how to effectively display a summary of results here.</p>
+
+<h2>Next Steps</h2>
+
+<ul>
+<li><p>In constructing a histogram, weigh pixels by visual saliency. Often, the colors we perceive as important in the image actually do not take up much area and so are not well represented in the image histogram.</p></li>
+<li><p>Provide UI for adjusting percentages of each color in the palette query. No backend work is needed.</p></li>
+<li><p>How to represent "do-not-care" colors?</p></li>
+<li><p>Threshold-and-re-normalize the color histograms: cut off normalized histogram mass above some threshold, and re-normalize. This is a trick used in constructing the <a href="http://en.wikipedia.org/wiki/Scale-invariant_feature_transform#Keypoint_descriptor">SIFT descriptor</a>, for example.</p></li>
+</ul>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/sergeyk">sergeyk</a></p>
