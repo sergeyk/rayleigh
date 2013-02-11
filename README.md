@@ -31,12 +31,12 @@ The documentation of the modules is generated from method docstrings and hosted 
 
 All planned and completed work is documented in a public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276).
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/black_yellow.png" width="640px" /><br />
+<img src="doc/images/black_yellow.png" width="640px" /><br />
 Rayleigh in the search-by-palette view.
 
 ---
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/image_similarity.png" width="640px" /><br />
+<img src="doc/images/image_similarity.png" width="640px" /><br />
 Rayleigh in the search-by-image view.
 
 ---
@@ -156,7 +156,7 @@ To construct the histogram, for each color in the palette we find the percentage
 
 We can represent this information in a slightly different way, by showing the top colors present in the image in a type of "palette image", with the area of a color in the palette image proportional to the prevalence of that color in the image.
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px" /><br />
+<img src="doc/images/examples1.png" width="800px" /><br />
 Example of four images, their raw color histograms, and their "palette images."
 
 ### Similarity of color content
@@ -172,7 +172,7 @@ The entirety of the sky seems to be in mostly two colors: a specific shade of ye
 But what if another image of a sunset, very similar to us perceptually, has two colors that are just slightly different?
 The histogram may in fact have no overlap at all then.
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/smoothing.png" width="640px" /><br />
+<img src="doc/images/smoothing.png" width="640px" /><br />
 An example of two images that are very similar perceptually having different raw histograms.
 
 ### Smoothing histograms
@@ -182,13 +182,13 @@ Note that the smoothed histograms look practically the same for the two images, 
 
 Therefore, our searchable representation of images will be in smoothed histograms.
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px" /><br />
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples2.png" width="800px" /><br />
+<img src="doc/images/examples1.png" width="800px" /><br />
+<img src="doc/images/examples2.png" width="800px" /><br />
 Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.
 
 We smooth histograms with a Gaussian kernel, with a parameter \\(\sigma\\) controlling the amount of smoothing.
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/exponential_smoothing.png" width="320px" /><br />
+<img src="doc/images/exponential_smoothing.png" width="320px" /><br />
 Effect of sigma on the amount of smoothing.
 
 Rayleigh offers a choice of a couple of settings of the sigma parameter.
@@ -223,15 +223,15 @@ My solution was to use the HSV color space and create a grid of colors by
     3. An additional K-1 variations by decreasing both saturation and lightness.
 3. Add as many grayscale levels as there are variations, as the last column.
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_8_2.png" width="200px" /><br />
+<img src="doc/images/palette_8_2.png" width="200px" /><br />
 Palette of 8 hues and 2 variations.
 
-<img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_14_3.png" width="320px" /><br />
+<img src="doc/images/palette_14_3.png" width="320px" /><br />
 Palette of 14 hues and 3 variations.
 
 <!--
 from skimage.io import imread, imshow, imsave
-im = imread('http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_14_3.png')
+im = imread('doc/images/palette_14_3.png')
 imsave('temp.png', scipy.misc.imresize(im, np.array(im.shape[:2])*50, interp='nearest'))
 -->
 
