@@ -11,6 +11,9 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+
+    <script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
   </head>
   <body>
     <div class="wrapper">
@@ -59,10 +62,10 @@ To allow robust matching, the histograms are smoothed.</p>
 
 <p>All planned and completed work is documented in a public <a href="https://trello.com/board/rayleigh/50d36a9e0f87f42952000276">Trello</a>.</p>
 
-<p><img src="doc/images/black_yellow.png" width="640px"><br>
+<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/black_yellow.png" width="640px"><br>
 Rayleigh in the search-by-palette view.</p>
 
-<hr><p><img src="doc/images/image_similarity.png" width="640px"><br>
+<hr><p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/image_similarity.png" width="640px"><br>
 Rayleigh in the search-by-image view.</p>
 
 <hr><h2>Prior Art</h2>
@@ -176,7 +179,7 @@ To construct the histogram, for each color in the palette we find the percentage
 
 <p>We can represent this information in a slightly different way, by showing the top colors present in the image in a type of "palette image", with the area of a color in the palette image proportional to the prevalence of that color in the image.</p>
 
-<p><img src="doc/images/examples1.png" width="800px"><br>
+<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px"><br>
 Example of four images, their raw color histograms, and their "palette images."</p>
 
 <h3>Similarity of color content</h3>
@@ -192,7 +195,7 @@ The entirety of the sky seems to be in mostly two colors: a specific shade of ye
 <p>But what if another image of a sunset, very similar to us perceptually, has two colors that are just slightly different?
 The histogram may in fact have no overlap at all then.</p>
 
-<p><img src="doc/images/smoothing.png" width="640px"><br>
+<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/smoothing.png" width="640px"><br>
 An example of two images that are very similar perceptually having different raw histograms.</p>
 
 <h3>Smoothing histograms</h3>
@@ -202,12 +205,12 @@ Note that the smoothed histograms look practically the same for the two images, 
 
 <p>Therefore, our searchable representation of images will be in smoothed histograms.</p>
 
-<p><img src="doc/images/examples1.png" width="800px"><br><img src="doc/images/examples2.png" width="800px"><br>
+<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px"><br><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples2.png" width="800px"><br>
 Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.</p>
 
 <p>We smooth histograms with a Gaussian kernel, with a parameter \(\sigma\) controlling the amount of smoothing.</p>
 
-<p><img src="doc/images/exponential_smoothing.png" width="320px"><br>
+<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/exponential_smoothing.png" width="320px"><br>
 Effect of sigma on the amount of smoothing.</p>
 
 <p>Rayleigh offers a choice of a couple of settings of the sigma parameter.</p>
@@ -246,10 +249,10 @@ My solution was to use the HSV color space and create a grid of colors by</p>
 </ol>
 </li>
 <li>Add as many grayscale levels as there are variations, as the last column.</li>
-</ol><p><img src="doc/images/palette_8_2.png" width="200px"><br>
+</ol><p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_8_2.png" width="200px"><br>
 Palette of 8 hues and 2 variations.</p>
 
-<p><img src="doc/images/palette_14_3.png" width="320px"><br>
+<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_14_3.png" width="320px"><br>
 Palette of 14 hues and 3 variations.</p>
 
 
