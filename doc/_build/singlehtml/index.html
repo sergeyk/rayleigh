@@ -1,0 +1,1163 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Rayleigh 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="top" title="None" href="index.html#document-index" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+    <li><a href="index.html#document-index">Rayleigh 1.0 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-rayleigh-s-documentation">
+<h1>Welcome to Rayleigh&#8217;s documentation!<a class="headerlink" href="#welcome-to-rayleigh-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<span id="document-intro"></span><div class="section" id="quick-start">
+<h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>To get your Rayleigh running locally, you must first populate a SearchableImageCollection.</p>
+<p>You can download a sample .pickle file and try running the server:</p>
+<div class="highlight-python"><pre>wget -P data https://s3.amazonaws.com/rayleigh/data/flickr_100K_exact_chi_square_16_0.pickle</pre>
+</div>
+<p>To run Rayleigh, we need to have a mongodb server running:</p>
+<div class="highlight-python"><pre>mongod --dbpath db --port 27666</pre>
+</div>
+<p>In another shell tab, run</p>
+<div class="highlight-python"><pre>python rayleigh/client/app.py</pre>
+</div>
+<p>You should now be able to access the running website at <a class="reference external" href="http://127.0.0.1:5000/">http://127.0.0.1:5000/</a></p>
+<p>To construct your own dataset from scratch, run</p>
+<div class="highlight-python"><pre>nosetests test/collection.py:TestFlickrCollection -s</pre>
+</div>
+<p>This uses the file data/flickr_1M.json.gz, which lists a million images from Flickr
+fetched by the &#8220;interestingness&#8221; API query over the last few years.</p>
+<p>Running this will download and process 100K images (or less, or more, if you modify the code).
+Data is stored into the mongodb database.
+It will help to have multiple cores working, so in a separate tab, do</p>
+<div class="highlight-python"><pre>ipcluster start 8</pre>
+</div>
+<p>This relies on the IPython parallel framework.</p>
+<p>If you want, you can reoutput the Flickr URLs</p>
+<div class="highlight-python"><pre>python rayleigh/assemble_flickr_dataset.py</pre>
+</div>
+<p>Have fun!</p>
+</div>
+<span id="document-apidoc/rayleigh"></span><div class="section" id="rayleigh-package">
+<h2>rayleigh Package<a class="headerlink" href="#rayleigh-package" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3><a class="reference internal" href="index.html#module-rayleigh" title="rayleigh"><tt class="xref py py-mod docutils literal"><span class="pre">rayleigh</span></tt></a> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-rayleigh"></span><p>Rayleigh is an open-source system for quickly searching medium-sized image
+collections by multiple colors given as a palette or derived from a query image.</p>
+</div>
+<div class="section" id="module-rayleigh.assemble_flickr_dataset">
+<span id="assemble-flickr-dataset-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">assemble_flickr_dataset</span></tt> Module<a class="headerlink" href="#module-rayleigh.assemble_flickr_dataset" title="Permalink to this headline">¶</a></h3>
+<p>Assemble a list of URLs to Flickr images fetched by repeated calls to
+the API method flickr.interestingness.getList.</p>
+<p>To use, you must place your [API key](<a class="reference external" href="http://www.flickr.com/services/apps/72157632345167838/key/">http://www.flickr.com/services/apps/72157632345167838/key/</a>)
+into a file named &#8216;flickr_api.key&#8217; located in the same directory as this file.</p>
+<p>There is a limit of 500 images per day, so to obtain more images than that,
+we iterate backwards from the current date until the desired number of images
+is obtained.</p>
+<dl class="function">
+<dt id="rayleigh.assemble_flickr_dataset.assemble_flickr_dataset">
+<tt class="descclassname">rayleigh.assemble_flickr_dataset.</tt><tt class="descname">assemble_flickr_dataset</tt><big>(</big><em>api_filename</em>, <em>data_filename</em>, <em>num_images_to_load</em><big>)</big><a class="reference internal" href="_modules/rayleigh/assemble_flickr_dataset.html#assemble_flickr_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.assemble_flickr_dataset.assemble_flickr_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble dataset containing the specified number of images using Flickr
+&#8216;interestingness&#8217; API calls.
+Returns nothing; writes data to file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>api_filename</strong> : string</p>
+<blockquote>
+<div><p>File should contain only one line, with your Flickr API key.</p>
+</div></blockquote>
+<p><strong>data_filename</strong> : string</p>
+<blockquote>
+<div><p>Gzipped JSON file that will contain the dataset.
+If it already exists, we will load the data in it and not repeat
+the work done.</p>
+</div></blockquote>
+<p class="last"><strong>num_images_to_load</strong> : int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.assemble_flickr_dataset.get_photos_list">
+<tt class="descclassname">rayleigh.assemble_flickr_dataset.</tt><tt class="descname">get_photos_list</tt><big>(</big><em>api_key</em>, <em>date</em><big>)</big><a class="reference internal" href="_modules/rayleigh/assemble_flickr_dataset.html#get_photos_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.assemble_flickr_dataset.get_photos_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.assemble_flickr_dataset.get_url">
+<tt class="descclassname">rayleigh.assemble_flickr_dataset.</tt><tt class="descname">get_url</tt><big>(</big><em>photo</em><big>)</big><a class="reference internal" href="_modules/rayleigh/assemble_flickr_dataset.html#get_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.assemble_flickr_dataset.get_url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.assemble_flickr_dataset.ids_and_urls_from_dataset">
+<tt class="descclassname">rayleigh.assemble_flickr_dataset.</tt><tt class="descname">ids_and_urls_from_dataset</tt><big>(</big><em>data_filename</em>, <em>num_images</em><big>)</big><a class="reference internal" href="_modules/rayleigh/assemble_flickr_dataset.html#ids_and_urls_from_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.assemble_flickr_dataset.ids_and_urls_from_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the data in given filename and return the first num_images urls
+(or all of them if num_images exceeds the total number).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>data_filename</strong> : string</p>
+<blockquote>
+<div><p>JSON file that will contain the dataset.</p>
+</div></blockquote>
+<p><strong>num_images</strong> : int</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>ids</strong> : list</p>
+<blockquote>
+<div><p>the Flickr IDs of the photos</p>
+</div></blockquote>
+<p><strong>urls</strong> : list</p>
+<blockquote class="last">
+<div><p>URLs of the photos</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rayleigh.collection">
+<span id="collection-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">collection</span></tt> Module<a class="headerlink" href="#module-rayleigh.collection" title="Permalink to this headline">¶</a></h3>
+<p>ImageCollection stores color information about images and exposes a method to
+add images to it, with support for parallel processing.
+The datastore is MongoDB, so a server must be running (launch with the settings
+in mongo.conf).</p>
+<dl class="class">
+<dt id="rayleigh.collection.ImageCollection">
+<em class="property">class </em><tt class="descclassname">rayleigh.collection.</tt><tt class="descname">ImageCollection</tt><big>(</big><em>palette</em><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Initalize an empty ImageCollection with a color palette that will be
+used to extract color information from images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>palette</strong> : Palette</p>
+<blockquote class="last">
+<div><p>Palette object representing the accepted colors.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="rayleigh.collection.ImageCollection.add_images">
+<tt class="descname">add_images</tt><big>(</big><em>image_urls</em>, <em>image_ids=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection.add_images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection.add_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add all images in a list of URLs.
+If ipcluster is running, load images in parallel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>image_urls</strong> : list</p>
+<p><strong>image_ids</strong> : list, optional</p>
+<blockquote class="last">
+<div><p>If given, images are stored with the given ids.
+If None, the index of the image in the dataset is its id.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.collection.ImageCollection.get_hists">
+<tt class="descname">get_hists</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection.get_hists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection.get_hists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return histograms of all images as a single numpy array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>hists</strong> : (N,K) ndarray</p>
+<blockquote class="last">
+<div><p>where N is the number of images in the database and K is the number
+of colors in the palette.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.collection.ImageCollection.get_id_ind_map">
+<tt class="descname">get_id_ind_map</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection.get_id_ind_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection.get_id_ind_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return dict of id to index and index to id.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.collection.ImageCollection.get_image">
+<tt class="descname">get_image</tt><big>(</big><em>image_id</em>, <em>no_hist=False</em><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection.get_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection.get_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return information about the image at id, or None if it doesn&#8217;t exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>image_id</strong> : string</p>
+<p><strong>no_hist</strong> : boolean</p>
+<blockquote>
+<div><p>If True, does not return the histogram, only the image metadata.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>image</strong> : dict, or None</p>
+<blockquote class="last">
+<div><p>information in database for this image id.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rayleigh.collection.ImageCollection.load">
+<em class="property">static </em><tt class="descname">load</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load ImageCollection from filename.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.collection.ImageCollection.save">
+<tt class="descname">save</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#ImageCollection.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.ImageCollection.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save self to filename.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.collection.get_mongodb_collection">
+<tt class="descclassname">rayleigh.collection.</tt><tt class="descname">get_mongodb_collection</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#get_mongodb_collection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.get_mongodb_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Establish connection to MongoDB and return the relevant collection.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>collection</strong> : pymongo.Collection</p>
+<blockquote class="last">
+<div><p>Pymongo Collection of images and their histograms.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.collection.process_image">
+<tt class="descclassname">rayleigh.collection.</tt><tt class="descname">process_image</tt><big>(</big><em>args</em><big>)</big><a class="reference internal" href="_modules/rayleigh/collection.html#process_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.collection.process_image" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><strong>success</strong> : boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rayleigh.image">
+<span id="image-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">image</span></tt> Module<a class="headerlink" href="#module-rayleigh.image" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="rayleigh.image.Image">
+<em class="property">class </em><tt class="descclassname">rayleigh.image.</tt><tt class="descname">Image</tt><big>(</big><em>url</em>, <em>_id=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/image.html#Image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.image.Image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Read the image at the URL in RGB format, downsample if needed,
+and convert to Lab colorspace.
+Store original dimensions, resize_factor, and the filename of the image.</p>
+<p>Image dimensions will be resized independently such that neither width nor
+height exceed the maximum allowed dimension MAX_DIMENSION.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>url</strong> : string</p>
+<blockquote>
+<div><p>URL or file path of the image to load.</p>
+</div></blockquote>
+<p><strong>id</strong> : string, optional</p>
+<blockquote class="last">
+<div><p>Name or some other id of the image. For example, the Flickr ID.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="attribute">
+<dt id="rayleigh.image.Image.MAX_DIMENSION">
+<tt class="descname">MAX_DIMENSION</tt><em class="property"> = 241</em><a class="headerlink" href="#rayleigh.image.Image.MAX_DIMENSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.image.Image.as_dict">
+<tt class="descname">as_dict</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/image.html#Image.as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.image.Image.as_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return relevant info about self in a dict.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.image.Image.output_quantized_to_palette">
+<tt class="descname">output_quantized_to_palette</tt><big>(</big><em>palette</em>, <em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/image.html#Image.output_quantized_to_palette"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.image.Image.output_quantized_to_palette" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save to filename a version of the image with all colors quantized
+to the nearest color in the given palette.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>palette</strong> : rayleigh.Palette</p>
+<blockquote>
+<div><p>Containing K colors.</p>
+</div></blockquote>
+<p><strong>filename</strong> : string</p>
+<blockquote class="last">
+<div><p>Where image will be written.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rayleigh.image.PaletteQuery">
+<em class="property">class </em><tt class="descclassname">rayleigh.image.</tt><tt class="descname">PaletteQuery</tt><big>(</big><em>palette_query</em><big>)</big><a class="reference internal" href="_modules/rayleigh/image.html#PaletteQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.image.PaletteQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Extract a L*a*b color array from a dict representation of a palette query.
+The array can then be used to histogram colors, output a palette image, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>palette_query</strong> : dict</p>
+<blockquote class="last">
+<div><p>A mapping of hex colors to unnormalized values, representing proportion
+in the palette (e.g. {&#8216;#ffffff&#8217;: 20, &#8216;#cc3300&#8217;: 0.5}).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rayleigh.palette">
+<span id="palette-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">palette</span></tt> Module<a class="headerlink" href="#module-rayleigh.palette" title="Permalink to this headline">¶</a></h3>
+<p>Encapsulate the list of hex colors and array of Lab values representations
+of a palette (codebook) of colors.</p>
+<p>Provide methods to work with color conversion and the Palette class.</p>
+<p>Provide a parametrized method to generate a palette that covers the range
+of colors.</p>
+<dl class="class">
+<dt id="rayleigh.palette.Palette">
+<em class="property">class </em><tt class="descclassname">rayleigh.palette.</tt><tt class="descname">Palette</tt><big>(</big><em>num_hues=8</em>, <em>sat_range=2</em>, <em>light_range=2</em><big>)</big><a class="reference internal" href="_modules/rayleigh/palette.html#Palette"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.palette.Palette" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Create a color palette (codebook) in the form of a 2D grid of colors,
+as described in the parameters list below.
+Further, the rightmost column has num_hues gradations from black to white.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>num_hues</strong> : int</p>
+<blockquote>
+<div><p>number of colors with full lightness and saturation, in the middle</p>
+</div></blockquote>
+<p><strong>sat_range</strong> : int</p>
+<blockquote>
+<div><p>number of rows above middle row that show
+the same hues with decreasing saturation.</p>
+</div></blockquote>
+<p><strong>light_range</strong> : int</p>
+<blockquote>
+<div><p>number of rows below middle row that show
+the same hues with decreasing lightness.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>palette: rayleigh.Palette</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="rayleigh.palette.Palette.output">
+<tt class="descname">output</tt><big>(</big><em>dirname</em><big>)</big><a class="reference internal" href="_modules/rayleigh/palette.html#Palette.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.palette.Palette.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output an image of the palette, josn list of the hex
+colors, and an HTML color picker for it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>dirname</strong> : string</p>
+<blockquote class="last">
+<div><p>directory for the files to be output</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-rayleigh.searchable_collection">
+<span id="searchable-collection-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">searchable_collection</span></tt> Module<a class="headerlink" href="#module-rayleigh.searchable_collection" title="Permalink to this headline">¶</a></h3>
+<p>Methods to search an ImageCollection with brute force, exhaustive search.</p>
+<dl class="class">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection">
+<em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollection</tt><big>(</big><em>image_collection</em>, <em>dist_metric</em>, <em>sigma</em>, <em>num_dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Initialize with a rayleigh.ImageCollection, a distance_metric, and the
+number of dimensions to reduce the histograms to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>image_collection</strong> : rayleigh.ImageCollection</p>
+<p><strong>dist_metric</strong> : string</p>
+<blockquote>
+<div><p>must be in self.DISTANCE_METRICS</p>
+</div></blockquote>
+<p><strong>sigma</strong> : nonnegative float</p>
+<blockquote>
+<div><p>Amount of smoothing applied to histograms.
+If 0, none.</p>
+</div></blockquote>
+<p><strong>num_dimensions</strong> : int</p>
+<blockquote class="last">
+<div><p>number of dimensions to reduce the histograms to, using PCA.
+If 0, do not reduce dimensions.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.get_image_hist">
+<tt class="descname">get_image_hist</tt><big>(</big><em>img_id</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.get_image_hist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.get_image_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the smoothed image histogram of the image with the given id.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>img_id</strong> : string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>color_hist</strong> : ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.load">
+<em class="property">static </em><tt class="descname">load</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load ImageCollection from filename.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.nn_ind">
+<tt class="descname">nn_ind</tt><big>(</big><em>color_hist</em>, <em>num</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.nn_ind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.nn_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return num closest nearest neighbors (potentially approximate) to the
+query color_hist, and the distances to them.</p>
+<p>Override this search method in extending classes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>color_hist</strong> : (K,) ndarray</p>
+<blockquote>
+<div><p>histogram over the color palette</p>
+</div></blockquote>
+<p><strong>num</strong> : int</p>
+<blockquote>
+<div><p>number of nearest neighbors to return.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>nn_ind</strong> : (num,) ndarray</p>
+<blockquote>
+<div><p>Indices of the neighbors in the dataset.</p>
+</div></blockquote>
+<p><strong>nn_dists (num,) ndarray</strong> :</p>
+<blockquote class="last">
+<div><p>Distances to the neighbors returned.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.reduce_dimensionality">
+<tt class="descname">reduce_dimensionality</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.reduce_dimensionality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.reduce_dimensionality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute and store PCA dimensionality-reduced histograms.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.save">
+<tt class="descname">save</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save self to filename.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.search_by_color_hist">
+<tt class="descname">search_by_color_hist</tt><big>(</big><em>color_hist</em>, <em>num=20</em>, <em>reduced=False</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.search_by_color_hist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.search_by_color_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search images in database by color similarity to the given histogram.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>color_hist</strong> : (K,) ndarray</p>
+<blockquote>
+<div><p>histogram over the color palette</p>
+</div></blockquote>
+<p><strong>num</strong> : int, optional</p>
+<blockquote>
+<div><p>number of nearest neighbors to ret</p>
+</div></blockquote>
+<p><strong>reduced</strong> : boolean, optional</p>
+<blockquote>
+<div><p>is the given color_hist already reduced in dimensionality?</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>query_img</strong> : dict</p>
+<blockquote>
+<div><p>info about the query image</p>
+</div></blockquote>
+<p><strong>results</strong> : list</p>
+<blockquote class="last">
+<div><p>list of dicts of nearest neighbors to query</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.search_by_image">
+<tt class="descname">search_by_image</tt><big>(</big><em>image_filename</em>, <em>num=20</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.search_by_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.search_by_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search images in database by color similarity to image.</p>
+<p>See search_by_color_hist().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.search_by_image_in_dataset">
+<tt class="descname">search_by_image_in_dataset</tt><big>(</big><em>img_id</em>, <em>num=20</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.search_by_image_in_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.search_by_image_in_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search images in database for similarity to the image with img_id in
+the database.</p>
+<p>See search_by_color_hist() for implementation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>img_id</strong> : string</p>
+<p><strong>num</strong> : int, optional</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>query_img_data</strong> : dict</p>
+<p><strong>results</strong> : list</p>
+<blockquote class="last">
+<div><p>list of dicts of nearest neighbors to query</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollection.smooth_histograms">
+<tt class="descname">smooth_histograms</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollection.smooth_histograms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollection.smooth_histograms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooth histograms with a Gaussian.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree">
+<em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollectionCKDTree</tt><big>(</big><em>image_collection</em>, <em>distance_metric</em>, <em>sigma</em>, <em>dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionCKDTree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#rayleigh.searchable_collection.SearchableImageCollection" title="rayleigh.searchable_collection.SearchableImageCollection"><tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></a></p>
+<p>Use the cKDTree data structure from scipy.spatial for the index.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>LEAF_SIZE (int): The number of points at which the algorithm switches</dt>
+<dd><p class="first last">over to brute-force.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>EPS (non-negative float): Parameter for query(), such that the</dt>
+<dd><p class="first last">k-th returned value is guaranteed to be no further than (1 + eps)
+times the distance to the real k-th nearest neighbor.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>NOTE: These parameters have not been tuned.</p>
+<p class="rubric">Methods</p>
+<dl class="attribute">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.DISTANCE_METRICS">
+<tt class="descname">DISTANCE_METRICS</tt><em class="property"> = ['manhattan', 'euclidean']</em><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.DISTANCE_METRICS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.EPSILON">
+<tt class="descname">EPSILON</tt><em class="property"> = 1</em><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.EPSILON" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.LEAF_SIZE">
+<tt class="descname">LEAF_SIZE</tt><em class="property"> = 5</em><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.LEAF_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.Ps">
+<tt class="descname">Ps</tt><em class="property"> = {'euclidean': 2, 'manhattan': 1}</em><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.Ps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.build_index">
+<tt class="descname">build_index</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionCKDTree.build_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.build_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.load">
+<em class="property">static </em><tt class="descname">load</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionCKDTree.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree.nn_ind">
+<tt class="descname">nn_ind</tt><big>(</big><em>color_hist</em>, <em>num</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionCKDTree.nn_ind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree.nn_ind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionExact">
+<em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollectionExact</tt><big>(</big><em>image_collection</em>, <em>dist_metric</em>, <em>sigma</em>, <em>num_dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionExact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionExact" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#rayleigh.searchable_collection.SearchableImageCollection" title="rayleigh.searchable_collection.SearchableImageCollection"><tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></a></p>
+<p>Search the image collection exhaustively (mainly through np.dot).</p>
+<p class="rubric">Methods</p>
+<dl class="attribute">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionExact.DISTANCE_METRICS">
+<tt class="descname">DISTANCE_METRICS</tt><em class="property"> = ['manhattan', 'euclidean', 'chi_square']</em><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionExact.DISTANCE_METRICS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionExact.nn_ind">
+<tt class="descname">nn_ind</tt><big>(</big><em>color_hist</em>, <em>num</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionExact.nn_ind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionExact.nn_ind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exact nearest neighbor seach through exhaustive comparison.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN">
+<em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollectionFLANN</tt><big>(</big><em>image_collection</em>, <em>distance_metric</em>, <em>sigma</em>, <em>dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionFLANN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="index.html#rayleigh.searchable_collection.SearchableImageCollection" title="rayleigh.searchable_collection.SearchableImageCollection"><tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></a></p>
+<p>Search the image collection using the FLANN library for aNN indexing.</p>
+<p>The FLANN index is built with automatic tuning of the search algorithm,
+which can take a while (~90s on 25K images).</p>
+<p class="rubric">Methods</p>
+<dl class="attribute">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN.DISTANCE_METRICS">
+<tt class="descname">DISTANCE_METRICS</tt><em class="property"> = ['manhattan', 'euclidean', 'chi_square']</em><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN.DISTANCE_METRICS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN.build_index">
+<tt class="descname">build_index</tt><big>(</big><em>index_filename=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionFLANN.build_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN.build_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN.load">
+<em class="property">static </em><tt class="descname">load</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionFLANN.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN.nn_ind">
+<tt class="descname">nn_ind</tt><big>(</big><em>color_hist</em>, <em>num</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionFLANN.nn_ind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN.nn_ind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN.save">
+<tt class="descname">save</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionFLANN.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-rayleigh.tictoc">
+<span id="tictoc-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">tictoc</span></tt> Module<a class="headerlink" href="#module-rayleigh.tictoc" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="rayleigh.tictoc.TicToc">
+<em class="property">class </em><tt class="descclassname">rayleigh.tictoc.</tt><tt class="descname">TicToc</tt><a class="reference internal" href="_modules/rayleigh/tictoc.html#TicToc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.tictoc.TicToc" title="Permalink to this definition">¶</a></dt>
+<dd><p>MATLAB-like tic/toc.</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="rayleigh.tictoc.TicToc.qtoc">
+<tt class="descname">qtoc</tt><big>(</big><em>label=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/tictoc.html#TicToc.qtoc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.tictoc.TicToc.qtoc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call toc(label, quiet=True).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.tictoc.TicToc.running">
+<tt class="descname">running</tt><big>(</big><em>label=None</em>, <em>msg=None</em>, <em>interval=1</em><big>)</big><a class="reference internal" href="_modules/rayleigh/tictoc.html#TicToc.running"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.tictoc.TicToc.running" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print &lt;msg&gt; every &lt;interval&gt; seconds, running the timer for &lt;label&gt;.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">label (string): [optional] label for the timer</p>
+<p>msg (string): [optional] message to print</p>
+<p class="last">interval (int): [optional] print every &lt;interval&gt; seconds</p>
+</dd>
+<dt>Return</dt>
+<dd>self</dd>
+<dt>Raises</dt>
+<dd>none</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.tictoc.TicToc.tic">
+<tt class="descname">tic</tt><big>(</big><em>label=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/tictoc.html#TicToc.tic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.tictoc.TicToc.tic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start timer for given label.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>label (string): optional label for the timer.</dd>
+<dt>Returns:</dt>
+<dd>self</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rayleigh.tictoc.TicToc.toc">
+<tt class="descname">toc</tt><big>(</big><em>label=None</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rayleigh/tictoc.html#TicToc.toc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.tictoc.TicToc.toc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return elapsed time for given label.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">label (string): [optional] label for the timer.</p>
+<p class="last">quiet (boolean): [optional] print time elapsed if false</p>
+</dd>
+<dt>Returns:</dt>
+<dd>elapsed (float): time elapsed</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-rayleigh.util">
+<span id="util-module"></span><h3><tt class="xref py py-mod docutils literal"><span class="pre">util</span></tt> Module<a class="headerlink" href="#module-rayleigh.util" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="rayleigh.util.color_hist_to_palette_image">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">color_hist_to_palette_image</tt><big>(</big><em>color_hist</em>, <em>palette</em>, <em>percentile=90</em>, <em>width=200</em>, <em>height=50</em>, <em>filename=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#color_hist_to_palette_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.color_hist_to_palette_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output the main colors in the histogram to a &#8220;palette image.&#8221;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>color_hist</strong> : (K,) ndarray</p>
+<p><strong>palette</strong> : rayleigh.Palette</p>
+<p><strong>percentile</strong> : int, optional:</p>
+<blockquote>
+<div><p>Output only colors above this percentile of prevalence in the histogram.</p>
+</div></blockquote>
+<p><strong>filename</strong> : string, optional:</p>
+<blockquote>
+<div><p>If given, save the resulting image to file.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>rgb_image</strong> : ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.hex2rgb">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">hex2rgb</tt><big>(</big><em>hexcolor_str</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#hex2rgb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.hex2rgb" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last simple">
+<li>hexcolor_str (string): e.g. &#8216;#ffffff&#8217; or &#8216;33cc00&#8217;</li>
+</ul>
+</dd>
+<dt>Returns:</dt>
+<dd><ul class="first last simple">
+<li>rgb_color (sequence of floats): e.g. (0.2, 0.3, 0)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.histogram_colors_smoothed">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">histogram_colors_smoothed</tt><big>(</big><em>lab_array</em>, <em>palette</em>, <em>sigma=10</em>, <em>plot_filename=None</em>, <em>direct=True</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#histogram_colors_smoothed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.histogram_colors_smoothed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a palette histogram of colors in the image, smoothed with
+a Gaussian. Can smooth directly per-pixel, or after computing a strict
+histogram.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lab_array</strong> : (N,3) ndarray</p>
+<blockquote>
+<div><p>The L*a*b color of each of N pixels.</p>
+</div></blockquote>
+<p><strong>palette</strong> : rayleigh.Palette</p>
+<blockquote>
+<div><p>Containing K colors.</p>
+</div></blockquote>
+<p><strong>sigma</strong> : float</p>
+<blockquote>
+<div><p>Variance of the smoothing Gaussian.</p>
+</div></blockquote>
+<p><strong>direct</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, constructs a smoothed histogram directly from pixels.
+If False, constructs a nearest-color histogram and then smoothes it.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>color_hist</strong> : (K,) ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.histogram_colors_strict">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">histogram_colors_strict</tt><big>(</big><em>lab_array</em>, <em>palette</em>, <em>plot_filename=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#histogram_colors_strict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.histogram_colors_strict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a palette histogram of colors in the image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lab_array</strong> : (N,3) ndarray</p>
+<blockquote>
+<div><p>The L*a*b color of each of N pixels.</p>
+</div></blockquote>
+<p><strong>palette</strong> : rayleigh.Palette</p>
+<blockquote>
+<div><p>Containing K colors.</p>
+</div></blockquote>
+<p><strong>plot_filename</strong> : string, optional</p>
+<blockquote>
+<div><p>If given, save histogram to this filename.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>color_hist</strong> : (K,) ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.histogram_colors_with_smoothing">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">histogram_colors_with_smoothing</tt><big>(</big><em>lab_array</em>, <em>palette</em>, <em>sigma=10</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#histogram_colors_with_smoothing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.histogram_colors_with_smoothing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign colors in the image to nearby colors in the palette, weighted by
+distance in Lab color space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lab_array (N,3) ndarray:</strong> :</p>
+<blockquote>
+<div><p>N is the number of data points, columns are L, a, b values.</p>
+</div></blockquote>
+<p><strong>palette</strong> : rayleigh.Palette</p>
+<blockquote>
+<div><p>containing K colors.</p>
+</div></blockquote>
+<p><strong>sigma</strong> : float</p>
+<blockquote>
+<div><p>(0,1] value to control the steepness of exponential falloff.
+To see the effect:</p>
+</div></blockquote>
+<p><strong>&gt;&gt;&gt; from pylab import *</strong> :</p>
+<p><strong>&gt;&gt;&gt; ds = linspace(0,5000) # squared distance</strong> :</p>
+<p><strong>&gt;&gt;&gt; sigma=10; plot(ds, exp(-ds/(2*sigma**2)), label=&#8217;$sigma=%.1f$&#8217;%sigma)</strong> :</p>
+<p><strong>&gt;&gt;&gt; sigma=20; plot(ds, exp(-ds/(2*sigma**2)), label=&#8217;$sigma=%.1f$&#8217;%sigma)</strong> :</p>
+<p><strong>&gt;&gt;&gt; sigma=40; plot(ds, exp(-ds/(2*sigma**2)), label=&#8217;$sigma=%.1f$&#8217;%sigma)</strong> :</p>
+<p><strong>&gt;&gt;&gt; ylim([0,1]); legend();</strong> :</p>
+<p><strong>&gt;&gt;&gt; xlabel(&#8216;Squared distance&#8217;); ylabel(&#8216;Weight&#8217;);</strong> :</p>
+<p><strong>&gt;&gt;&gt; title(&#8216;Exponential smoothing&#8217;)</strong> :</p>
+<p><strong>&gt;&gt;&gt; #plt.savefig(&#8216;exponential_smoothing.png&#8217;, dpi=300)</strong> :</p>
+<blockquote>
+<div><p>sigma=20 seems reasonable: hits 0 around squared distance of 4000.</p>
+</div></blockquote>
+<p><strong>Returns:</strong> :</p>
+<p><strong>color_hist</strong> : (K,) ndarray</p>
+<blockquote class="last">
+<div><p>the normalized, smooth histogram of colors.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.makedirs">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">makedirs</tt><big>(</big><em>dirname</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#makedirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.makedirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does what mkdir -p does, and returns dirname.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.output_histogram_base64">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">output_histogram_base64</tt><big>(</big><em>color_hist</em>, <em>palette</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#output_histogram_base64"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.output_histogram_base64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return base64-encoded image containing the color palette histogram.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last simple">
+<li>color_hist (K, ndarray)</li>
+<li>palette (Palette)</li>
+</ul>
+</dd>
+<dt>Returns:</dt>
+<dd><ul class="first last simple">
+<li>data_uri (base64 encoded string)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.output_plot_for_flask">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">output_plot_for_flask</tt><big>(</big><em>color_hist</em>, <em>palette</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#output_plot_for_flask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.output_plot_for_flask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an object suitable to be sent as an image by Flask,
+containing the color palette histogram.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last simple">
+<li>color_hist (K, ndarray)</li>
+<li>palette (Palette)</li>
+</ul>
+</dd>
+<dt>Returns:</dt>
+<dd><ul class="first last simple">
+<li>png_output (StringIO)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.palette_query_to_rgb_image">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">palette_query_to_rgb_image</tt><big>(</big><em>palette_query</em>, <em>width=200</em>, <em>height=50</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#palette_query_to_rgb_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.palette_query_to_rgb_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a list of hex colors and their values to an RGB image of given
+width and height.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>palette_query (dict):</dt>
+<dd><p class="first last">a dictionary of hex colors to unnormalized values,
+e.g. {&#8216;#ffffff&#8217;: 20, &#8216;#33cc00&#8217;: 0.4}.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.plot_histogram">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">plot_histogram</tt><big>(</big><em>color_hist</em>, <em>palette</em>, <em>plot_filename=None</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#plot_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.plot_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Figure containing the color palette histogram.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last">
+<li><p class="first">color_hist (K, ndarray)</p>
+</li>
+<li><p class="first">palette (Palette)</p>
+</li>
+<li><dl class="first docutils">
+<dt>plot_filename (string) [default=None]:</dt>
+<dd><p class="first last">Save histogram to this file, if given.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Returns:</dt>
+<dd><ul class="first last simple">
+<li>fig (Figure)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.rgb2hex">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">rgb2hex</tt><big>(</big><em>rgb_number</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#rgb2hex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.rgb2hex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Args:</dt>
+<dd><ul class="first last simple">
+<li>rgb_number (sequence of float)</li>
+</ul>
+</dd>
+<dt>Returns:</dt>
+<dd><ul class="first last simple">
+<li>hex_number (string)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="rayleigh.util.smooth_histogram">
+<tt class="descclassname">rayleigh.util.</tt><tt class="descname">smooth_histogram</tt><big>(</big><em>color_hist</em>, <em>palette</em>, <em>sigma=10</em><big>)</big><a class="reference internal" href="_modules/rayleigh/util.html#smooth_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.util.smooth_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooth the given palette histogram with a Gaussian of variance sigma.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>color_hist</strong> : (K,) ndarray</p>
+<p><strong>palette</strong> : rayleigh.Palette</p>
+<blockquote>
+<div><p>containing K colors.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>color_hist_smooth</strong> : (K,) ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="index.html#document-index">Table Of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-intro">Quick start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-apidoc/rayleigh">rayleigh Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#id1"><tt class="docutils literal"><span class="pre">rayleigh</span></tt> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.assemble_flickr_dataset"><tt class="docutils literal"><span class="pre">assemble_flickr_dataset</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.collection"><tt class="docutils literal"><span class="pre">collection</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.image"><tt class="docutils literal"><span class="pre">image</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.palette"><tt class="docutils literal"><span class="pre">palette</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.searchable_collection"><tt class="docutils literal"><span class="pre">searchable_collection</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.tictoc"><tt class="docutils literal"><span class="pre">tictoc</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.util"><tt class="docutils literal"><span class="pre">util</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+    <li><a href="index.html#document-index">Rayleigh 1.0 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Sergey Karayev.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>
