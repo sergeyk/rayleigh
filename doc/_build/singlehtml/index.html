@@ -85,7 +85,7 @@ It will help to have multiple cores working, so in a separate tab, do</p>
 <span id="document-apidoc/rayleigh"></span><div class="section" id="rayleigh-package">
 <h2>rayleigh Package<a class="headerlink" href="#rayleigh-package" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id1">
-<h3><tt class="xref py py-mod docutils literal"><span class="pre">rayleigh</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><a class="reference internal" href="index.html#module-rayleigh" title="rayleigh"><tt class="xref py py-mod docutils literal"><span class="pre">rayleigh</span></tt></a> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <span class="target" id="module-rayleigh"></span><p>Rayleigh is an open-source system for quickly searching medium-sized image
 collections by multiple colors given as a palette or derived from a query image.</p>
 </div>
@@ -636,7 +636,7 @@ the database.</p>
 <dl class="class">
 <dt id="rayleigh.searchable_collection.SearchableImageCollectionCKDTree">
 <em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollectionCKDTree</tt><big>(</big><em>image_collection</em>, <em>distance_metric</em>, <em>sigma</em>, <em>dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionCKDTree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionCKDTree" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></p>
+<dd><p>Bases: <a class="reference internal" href="index.html#rayleigh.searchable_collection.SearchableImageCollection" title="rayleigh.searchable_collection.SearchableImageCollection"><tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></a></p>
 <p>Use the cKDTree data structure from scipy.spatial for the index.</p>
 <dl class="docutils">
 <dt>Parameters:</dt>
@@ -699,7 +699,7 @@ times the distance to the real k-th nearest neighbor.</p>
 <dl class="class">
 <dt id="rayleigh.searchable_collection.SearchableImageCollectionExact">
 <em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollectionExact</tt><big>(</big><em>image_collection</em>, <em>dist_metric</em>, <em>sigma</em>, <em>num_dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionExact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionExact" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></p>
+<dd><p>Bases: <a class="reference internal" href="index.html#rayleigh.searchable_collection.SearchableImageCollection" title="rayleigh.searchable_collection.SearchableImageCollection"><tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></a></p>
 <p>Search the image collection exhaustively (mainly through np.dot).</p>
 <p class="rubric">Methods</p>
 <dl class="attribute">
@@ -718,7 +718,7 @@ times the distance to the real k-th nearest neighbor.</p>
 <dl class="class">
 <dt id="rayleigh.searchable_collection.SearchableImageCollectionFLANN">
 <em class="property">class </em><tt class="descclassname">rayleigh.searchable_collection.</tt><tt class="descname">SearchableImageCollectionFLANN</tt><big>(</big><em>image_collection</em>, <em>distance_metric</em>, <em>sigma</em>, <em>dimensions</em><big>)</big><a class="reference internal" href="_modules/rayleigh/searchable_collection.html#SearchableImageCollectionFLANN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rayleigh.searchable_collection.SearchableImageCollectionFLANN" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></p>
+<dd><p>Bases: <a class="reference internal" href="index.html#rayleigh.searchable_collection.SearchableImageCollection" title="rayleigh.searchable_collection.SearchableImageCollection"><tt class="xref py py-class docutils literal"><span class="pre">rayleigh.searchable_collection.SearchableImageCollection</span></tt></a></p>
 <p>Search the image collection using the FLANN library for aNN indexing.</p>
 <p>The FLANN index is built with automatic tuning of the search algorithm,
 which can take a while (~90s on 25K images).</p>
