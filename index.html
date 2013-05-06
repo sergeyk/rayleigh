@@ -4,77 +4,90 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Rayleigh by sergeyk</title>
-
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
     <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-    <script type="text/javascript"
-  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
   </head>
   <body>
-    <div class="wrapper">
+
       <header>
         <h1>Rayleigh</h1>
         <p></p>
-
-        <p class="view"><a href="https://github.com/sergeyk/rayleigh">View the Project on GitHub <small>sergeyk/rayleigh</small></a></p>
       </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/sergeyk/rayleigh" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/sergeyk/rayleigh/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/sergeyk/rayleigh/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
       <section>
         <h1>Rayleigh: search images by multiple colors</h1>
 
-<p>We present an open-source system (<a href="http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com">demo website</a>) for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.</p>
+<p>We present an open-source system for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.
+The system is running at <a href="http://multicolorsearch.com">multicolorsearch.com</a>.</p>
 
-<p>The high-level concept is that images are represented as histograms over a fixed palette of colors in CIELab space.
-Sets of colors used for searching are similarly represented as histograms.
-The similarity of images to other images and to a query set of colors is formulated in terms of distance between histograms.
-To allow robust matching, the histograms are smoothed.</p>
-
-<h3>System components</h3>
+<h3>In brief</h3>
 
 <ul>
-<li><p>The back end processes image URLs to extract color information to store in a searchable database.</p></li>
-<li><p>The web server provides REST access to the back end.</p></li>
-<li><p>The client provides the UI for selecting a color palette to search with, or an image, and requests data from the web server.</p></li>
+<li>Images are represented as histograms over a fixed palette of colors in CIELab space.</li>
+<li>Sets of colors used for searching are similarly represented as histograms.</li>
+<li>Similarity of images to other images and to a query set of colors is formulated in terms of distance between histograms.</li>
+<li>To make matching more robust to small differences in color, histograms are smoothed.</li>
+</ul><h3>System components</h3>
+
+<ul>
+<li>The back end processes image URLs to extract color information to store in a searchable database.</li>
+<li>The web server provides REST access to the back end.</li>
+<li>The client provides the UI for selecting a color palette to search with, or an image, and requests data from the web server.</li>
 </ul><h3>Documentation</h3>
 
-<p>This writeup covers:</p>
+<p>In addition to this high-level presentation, code is documented at <a href="https://rayleigh.readthedocs.org/en/latest/">Rayleigh ReadTheDocs</a>.</p>
 
-<ol>
-<li>prior art</li>
-<li>color perception and color spaces</li>
-<li>histogram representation of an image or a palette</li>
-<li>constructing a palette</li>
-<li>architecture of the working system</li>
-<li>results</li>
-<li>next steps</li>
-</ol><p>The documentation of the modules is generated from method docstrings and hosted by <a href="https://rayleigh.readthedocs.org/en/latest/">ReadTheDocs</a>.</p>
+<p>A public <a href="https://trello.com/board/rayleigh/50d36a9e0f87f42952000276">Trello</a> contains current and archived tasks.</p>
 
-<p>All planned and completed work is documented in a public <a href="https://trello.com/board/rayleigh/50d36a9e0f87f42952000276">Trello</a>.</p>
+<h3>Screenshots</h3>
 
-<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/black_yellow.png" width="640px"><br>
+<p><img src="doc/images/black_yellow.png" width="640px"><br>
 Rayleigh in the search-by-palette view.</p>
 
-<hr><p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/image_similarity.png" width="640px"><br>
+<hr><p><img src="doc/images/image_similarity.png" width="640px"><br>
 Rayleigh in the search-by-image view.</p>
 
-<hr><h2>Prior Art</h2>
+<h2>Prior Art</h2>
+
+
 
 <p>The Content-Based Image Retrieval (CBIR) field has done much work on image similarity in the past couple of decades.
 My brief impression of the field is that color similarity was initially seen as proxy for general visual similarity, not an end to itself.
-Later research has focused more on closing the "semantic gap" in terms of nouns and verbs.</p>
+More recent research focuses on closing the "semantic gap" in terms of nouns and verbs.</p>
 
-<p>I was able to find two implementations of a multi-color search engine, both closed-source:</p>
+<p>I was able to find two implementations of multi-color searching, both closed-source:</p>
 
 <ul>
-<li><p>the excellent <a href="http://labs.tineye.com/multicolr">Idee Labs Multicolr Search</a>, a rather expensive commercial service;</p></li>
-<li><p>an experiment called <a href="http://chromatik.labs.exalead.com/">Chromatik</a>.</p></li>
-</ul><p>There is an open-source project on top of Apache Lucene for general image retrieval, called <a href="http://www.semanticmetadata.net/wiki/doku.php?id=lire:lire">Lire</a>; I have not tried it.</p>
+<li>the excellent <a href="http://labs.tineye.com/multicolr">Idee Labs Multicolr Search</a>, a rather expensive commercial service;</li>
+<li>an experiment called <a href="http://chromatik.labs.exalead.com/">Chromatik</a>.</li>
+</ul><p>There is an open-source project on top of Apache Lucene for general image retrieval, called <a href="http://www.semanticmetadata.net/wiki/doku.php?id=lire:lire">Lire</a>.
+I have not tried it.</p>
 
-<p>Additionally, a simple open-source implementation of a single-color search was useful to see, thanks to <a href="http://99designs.com/tech-blog/blog/2012/08/02/color-explorer/">99designs</a>.</p>
+<p>Additionally, a simple open-source implementation of a <a href="http://99designs.com/tech-blog/blog/2012/08/02/color-explorer/">single-color search</a> was useful to see.</p>
 
 <h2>Perception of Color</h2>
 
@@ -172,7 +185,7 @@ To construct the histogram, for each color in the palette we find the percentage
 
 <p>We can represent this information in a slightly different way, by showing the top colors present in the image in a type of "palette image", with the area of a color in the palette image proportional to the prevalence of that color in the image.</p>
 
-<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px"><br>
+<p><img src="doc/images/examples1.png" width="800px"><br>
 Example of four images, their raw color histograms, and their "palette images."</p>
 
 <h3>Similarity of color content</h3>
@@ -188,7 +201,7 @@ The entirety of the sky seems to be in mostly two colors: a specific shade of ye
 <p>But what if another image of a sunset, very similar to us perceptually, has two colors that are just slightly different?
 The histogram may in fact have no overlap at all then.</p>
 
-<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/smoothing.png" width="640px"><br>
+<p><img src="doc/images/smoothing.png" width="640px"><br>
 An example of two images that are very similar perceptually having different raw histograms.</p>
 
 <h3>Smoothing histograms</h3>
@@ -198,12 +211,12 @@ Note that the smoothed histograms look practically the same for the two images, 
 
 <p>Therefore, our searchable representation of images will be in smoothed histograms.</p>
 
-<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples1.png" width="800px"><br><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/examples2.png" width="800px"><br>
+<p><img src="doc/images/examples1.png" width="800px"><br><img src="doc/images/examples2.png" width="800px"><br>
 Example of four images, their raw color histograms, their "palette images.", and their smoothed histograms.</p>
 
 <p>We smooth histograms with a Gaussian kernel, with a parameter \(\sigma\) controlling the amount of smoothing.</p>
 
-<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/exponential_smoothing.png" width="320px"><br>
+<p><img src="doc/images/exponential_smoothing.png" width="320px"><br>
 Effect of sigma on the amount of smoothing.</p>
 
 <p>Rayleigh offers a choice of a couple of settings of the sigma parameter.</p>
@@ -242,10 +255,10 @@ My solution was to use the HSV color space and create a grid of colors by</p>
 </ol>
 </li>
 <li>Add as many grayscale levels as there are variations, as the last column.</li>
-</ol><p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_8_2.png" width="200px"><br>
+</ol><p><img src="doc/images/palette_8_2.png" width="200px"><br>
 Palette of 8 hues and 2 variations.</p>
 
-<p><img src="http://raw.github.com/sergeyk/rayleigh/master/doc/images/palette_14_3.png" width="320px"><br>
+<p><img src="doc/images/palette_14_3.png" width="320px"><br>
 Palette of 14 hues and 3 variations.</p>
 
 
@@ -311,6 +324,8 @@ Parameters are tuned such that the index is fast but can return inexact results.
 
 <h2>Next Steps</h2>
 
+
+
 <ul>
 <li><p>In constructing a histogram, weigh pixels by visual saliency. Often, the colors we perceive as important in the image actually do not take up much area and so are not well represented in the image histogram.</p></li>
 <li><p>Provide UI for adjusting percentages of each color in the palette query. No backend work is needed.</p></li>
@@ -319,11 +334,11 @@ Parameters are tuned such that the index is fast but can return inexact results.
 </ul>
       </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/sergeyk">sergeyk</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <p>Project maintained by <a href="https://github.com/sergeyk">sergeyk</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></small></p>
       </footer>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
     
   </body>
 </html>
