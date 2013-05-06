@@ -4,7 +4,7 @@ from context import *
 class TestUtil(unittest.TestCase):
 
     def test_histogram(self):
-        dirname = skutil.makedirs(os.path.join(temp_dirname, 'util'))
+        dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, 'util'))
 
         num_hues = 7
         sat_range = light_range = 2

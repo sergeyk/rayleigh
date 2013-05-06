@@ -12,8 +12,7 @@ import numpy as np
 from numpy.testing import *
 from IPython import embed
 
-from skpyutils import skutil
-from skpyutils import TicToc
+from rayleigh.util import TicToc
 
 import rayleigh
 

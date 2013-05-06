@@ -15,7 +15,7 @@ from scipy.spatial import cKDTree
 import util
 from image import Image
 
-from skpyutils import TicToc
+from rayleigh.util import TicToc
 tt = TicToc()
 
 

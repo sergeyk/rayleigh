@@ -4,7 +4,7 @@ from shutil import copy
 
 class TestPalette(unittest.TestCase):
     def test_create_palette(self):
-        dirname = skutil.makedirs(os.path.join(temp_dirname, 'palette'))
+        dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, 'palette'))
         for num_hues in [11, 10, 9, 8]:
             for val in [2, 3]:
                 sat_range = light_range = val

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import cStringIO as StringIO
 from sklearn.metrics import euclidean_distances
 from skimage.io import imsave
+from tictoc import TicToc
 
 
 def rgb2hex(rgb_number):
@@ -279,3 +280,13 @@ def histogram_colors_with_smoothing(lab_array, palette, sigma=10):
     color_hist /= lab_array.shape[0]
     color_hist[color_hist < 1e-5] = 0
     return color_hist
+
+
+def makedirs(dirname):
+    "Does what mkdir -p does, and returns dirname."
+    if not os.path.exists(dirname):
+        try:
+            os.makedirs(dirname)
+        except:
+            print("Exception on os.makedirs")
+    return dirname

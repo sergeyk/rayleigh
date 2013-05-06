@@ -10,7 +10,7 @@ from rayleigh import *
 class TestSyntheticCollection(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dirname = skutil.makedirs(os.path.join(temp_dirname, 'synthetic_colors'))
+        cls.dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, 'synthetic_colors'))
         cls.palette = rayleigh.Palette()
         cls.filenames = [save_synthetic_image(color, cls.dirname) for color in cls.palette.hex_list]
 
@@ -57,7 +57,7 @@ class TestFlickrCollection(unittest.TestCase):
         image_list_name = 'flickr_100K'
         num_images = int(1e5)
 
-        dirname = skutil.makedirs(os.path.join(temp_dirname, image_list_name))
+        dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, image_list_name))
         num_queries = 50
         palette = rayleigh.Palette(num_hues=10, light_range=3, sat_range=2)
         palette.output(dirname=dirname)

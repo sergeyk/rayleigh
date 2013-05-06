@@ -13,8 +13,8 @@ import IPython.parallel as parallel
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from bson import Binary
+from rayleigh.util import TicToc
 import rayleigh
-from skpyutils import TicToc
 tt = TicToc()
 
 

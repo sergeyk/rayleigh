@@ -7,7 +7,7 @@ from context import *
 class TestPaletteQuery(unittest.TestCase):
 
     def test_histogram(self):
-        dirname = skutil.makedirs(os.path.join(temp_dirname, 'palette_query'))
+        dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, 'palette_query'))
         palette = rayleigh.Palette()
         palette.output(dirname)
 

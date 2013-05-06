@@ -13,7 +13,7 @@ class TestImage(unittest.TestCase):
         num_hues = 7
         sat_range = light_range = 2
         palette = rayleigh.Palette(num_hues, sat_range, light_range)
-        dirname = skutil.makedirs(os.path.join(temp_dirname, 'image'))
+        dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, 'image'))
         palette.output(dirname)
         palette_filename = os.path.join(dirname, 'palette.png')
         assert(os.path.exists(palette_filename))
@@ -37,7 +37,7 @@ class TestImage(unittest.TestCase):
     def test_flickr(self):
         # TODO: output a single HTML file instead of using the file browser to
         # look at all these files
-        dirname = skutil.makedirs(os.path.join(temp_dirname, 'image_flickr'))
+        dirname = rayleigh.util.makedirs(os.path.join(temp_dirname, 'image_flickr'))
         palette = rayleigh.Palette(num_hues=10, light_range=3, sat_range=2)
         palette.output(dirname)
 

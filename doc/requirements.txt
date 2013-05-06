@@ -1,1 +1,2 @@
-numpydoc
+sphinx
+cloud_sptheme

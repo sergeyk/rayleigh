@@ -1,35 +1,28 @@
 # Rayleigh: search images by multiple colors
 
-We present an open-source system ([demo website](http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com)) for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.
+We present an open-source system for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.
+The system is running at [multicolorsearch.com](http://multicolorsearch.com).
 
-The high-level concept is that images are represented as histograms over a fixed palette of colors in CIELab space.
-Sets of colors used for searching are similarly represented as histograms.
-The similarity of images to other images and to a query set of colors is formulated in terms of distance between histograms.
-To allow robust matching, the histograms are smoothed.
+### In brief
+
+- Images are represented as histograms over a fixed palette of colors in CIELab space.
+- Sets of colors used for searching are similarly represented as histograms.
+- Similarity of images to other images and to a query set of colors is formulated in terms of distance between histograms.
+- To make matching more robust to small differences in color, histograms are smoothed.
 
 ### System components
 
 - The back end processes image URLs to extract color information to store in a searchable database.
-
 - The web server provides REST access to the back end.
-
 - The client provides the UI for selecting a color palette to search with, or an image, and requests data from the web server.
 
 ### Documentation
 
-This writeup covers:
+In addition to this high-level presentation, code is documented at [Rayleigh ReadTheDocs](https://rayleigh.readthedocs.org/en/latest/).
 
-1. prior art
-1. color perception and color spaces
-1. histogram representation of an image or a palette
-1. constructing a palette
-1. architecture of the working system
-1. results
-1. next steps
+A public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276) contains current and archived tasks.
 
-The documentation of the modules is generated from method docstrings and hosted by [ReadTheDocs](https://rayleigh.readthedocs.org/en/latest/).
-
-All planned and completed work is documented in a public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276).
+### Screenshots
 
 <img src="doc/images/black_yellow.png" width="640px" /><br />
 Rayleigh in the search-by-palette view.
@@ -39,23 +32,27 @@ Rayleigh in the search-by-palette view.
 <img src="doc/images/image_similarity.png" width="640px" /><br />
 Rayleigh in the search-by-image view.
 
----
-
 ## Prior Art
+
+<!--
+    I'm having a difficult time understanding how the work you are detailing below will build on CBIR, Idee Labs Multicolr Search, or any of your other examples. Also, can you explain in an additional sentence how later research has closed the "semantic gap" in terms of nouns and verbs? Might be a lot to do in a post like this but I'd sort of like a state of the field description earlier on.
+
+    Jessica
+-->
 
 The Content-Based Image Retrieval (CBIR) field has done much work on image similarity in the past couple of decades.
 My brief impression of the field is that color similarity was initially seen as proxy for general visual similarity, not an end to itself.
-Later research has focused more on closing the "semantic gap" in terms of nouns and verbs.
+More recent research focuses on closing the "semantic gap" in terms of nouns and verbs.
 
-I was able to find two implementations of a multi-color search engine, both closed-source:
+I was able to find two implementations of multi-color searching, both closed-source:
 
 - the excellent [Idee Labs Multicolr Search](http://labs.tineye.com/multicolr), a rather expensive commercial service;
-
 - an experiment called [Chromatik](http://chromatik.labs.exalead.com/).
 
-There is an open-source project on top of Apache Lucene for general image retrieval, called [Lire](http://www.semanticmetadata.net/wiki/doku.php?id=lire:lire); I have not tried it.
+There is an open-source project on top of Apache Lucene for general image retrieval, called [Lire](http://www.semanticmetadata.net/wiki/doku.php?id=lire:lire).
+I have not tried it.
 
-Additionally, a simple open-source implementation of a single-color search was useful to see, thanks to [99designs](http://99designs.com/tech-blog/blog/2012/08/02/color-explorer/).
+Additionally, a simple open-source implementation of a [single-color search](http://99designs.com/tech-blog/blog/2012/08/02/color-explorer/) was useful to see.
 
 ## Perception of Color
 
@@ -297,6 +294,12 @@ Please use the [demo](http://ec2-204-236-191-162.us-west-1.compute.amazonaws.com
 I would appreciate suggestions on how to effectively display a summary of results here.
 
 ## Next Steps
+
+<!--
+    For ease of reading, you might want to integrate a brief conclusion (one bullet point would suffice) into your next steps section (e.g. Conclusion and Next Steps). But I like things summarized and redundant so take that with a grain of salt... 
+
+    Jessica
+-->
 
 - In constructing a histogram, weigh pixels by visual saliency. Often, the colors we perceive as important in the image actually do not take up much area and so are not well represented in the image histogram.
 

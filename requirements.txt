@@ -1,7 +1,7 @@
 numpy
-numpydoc
-scikits-image
+scikit-image
 scikit-learn
 flask
 pymongo
 simplejson
+pyflann
