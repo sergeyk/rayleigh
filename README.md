@@ -1,5 +1,7 @@
 # Rayleigh: search images by multiple colors
 
+## Introduction
+
 We present an open-source system for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.
 The system is running at [multicolorsearch.com](http://multicolorsearch.com).
 
@@ -18,7 +20,7 @@ The system is running at [multicolorsearch.com](http://multicolorsearch.com).
 
 ### Documentation
 
-In addition to this high-level presentation, code is documented at [Rayleigh ReadTheDocs](https://rayleigh.readthedocs.org/en/latest/).
+In addition to this high-level presentation, code is documented [here](/doc/_build/singlehtml).
 
 A public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276) contains current and archived tasks.
 
