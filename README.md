@@ -20,7 +20,7 @@ The system is running at [multicolorsearch.com](http://multicolorsearch.com).
 
 ### Documentation
 
-In addition to this high-level presentation, code is documented [here](/doc/_build/singlehtml).
+In addition to this high-level presentation, code is documented [here](singlehtml).
 
 A public [Trello](https://trello.com/board/rayleigh/50d36a9e0f87f42952000276) contains current and archived tasks.
 
