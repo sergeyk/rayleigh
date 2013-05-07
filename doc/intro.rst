@@ -1,3 +1,19 @@
+Installation
+------------
+
+Rayleigh has only been tested with Python 2.7, on OS X 10.8 and Ubuntu 12.04.
+
+First, install FLANN_ from source, making sure to compile with Python support.
+Test that you can :code:`import pyflann` from a python console.
+
+Now, go into the Rayleigh directory that you cloned from the `Github repository`_, and run ::
+
+    pip install -r requirements.txt
+
+.. _FLANN : http://www.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN
+
+.. _`Github repository` : https://github.com/sergeyk/rayleigh
+
 Quick start
 -----------
 
@@ -16,6 +32,8 @@ In another shell tab, run ::
     python rayleigh/client/app.py
 
 You should now be able to access the running website at http://127.0.0.1:5000/
+
+You can download more pickled SearchableImageCollections from https://s3.amazonaws.com/rayleigh/.
 
 To construct your own dataset from scratch, run ::
 

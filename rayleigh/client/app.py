@@ -31,35 +31,34 @@ def make_json_response(body, status_code=200):
 """
 Load the Searchable Image Collections that can be used to search.
 """
-sics = {
-    'Chi-square, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_exact_chi_square_8_0.pickle')),
-
-    'Chi-square, sigma=16, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_exact_chi_square_16_0.pickle')),
-
-    'Euclidean, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_exact_euclidean_8_0.pickle')),
-
-    'Euclidean, sigma=16, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_exact_euclidean_16_0.pickle')),
-
-    'Manhattan, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_exact_manhattan_8_0.pickle')),
-
-    'Manhattan, sigma=8, Exact': rayleigh.SearchableImageCollectionExact.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_exact_manhattan_16_0.pickle')),
-
-    'Euclidean, sigma=16, FLANN': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_flann_euclidean_16_0.pickle')),
-
-    'Manhattan, sigma=16, FLANN': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_flann_manhattan_16_0.pickle')),
-
-    'Chi-square, sigma=16, FLANN': rayleigh.SearchableImageCollectionFLANN.load(os.path.join(
-        repo_dirname, 'data/flickr_100K_flann_chi_square_16_0.pickle'))
+fname_dict = {
+    'data/flickr_100K_exact_chi_square_8_0.pickle': (
+        'Chi-square, sigma=8, Exact', rayleigh.SearchableImageCollectionExact),
+    'data/flickr_100K_exact_chi_square_16_0.pickle': (
+        'Chi-square, sigma=16, Exact', rayleigh.SearchableImageCollectionExact),
+    'data/flickr_100K_flann_chi_square_16_0.pickle': (
+        'Chi-square, sigma=16, FLANN', rayleigh.SearchableImageCollectionFLANN),
+    'data/flickr_100K_exact_manhattan_8_0.pickle': (
+        'Manhattan, sigma=8, Exact', rayleigh.SearchableImageCollectionExact),
+    'data/flickr_100K_exact_manhattan_16_0.pickle': (
+        'Manhattan, sigma=16, Exact', rayleigh.SearchableImageCollectionExact),
+    'data/flickr_100K_flann_manhattan_16_0.pickle': (
+        'Manhattan, sigma=16, FLANN', rayleigh.SearchableImageCollectionFLANN),
+    'data/flickr_100K_exact_euclidean_8_0.pickle': (
+        'Euclidean, sigma=8, Exact', rayleigh.SearchableImageCollectionExact),
+    'data/flickr_100K_exact_euclidean_16_0.pickle': (
+        'Euclidean, sigma=16, Exact', rayleigh.SearchableImageCollectionExact),
+    'data/flickr_100K_flann_euclidean_16_0.pickle': (
+        'Euclidean, sigma=16, FLANN', rayleigh.SearchableImageCollectionFLANN),
 }
-default_sic_type = "Chi-square, sigma=16, Exact"
+
+sics = {}
+for fname in fname_dict.keys():
+    full_fname = os.path.join(repo_dirname, fname)
+    if os.path.exists(full_fname):
+        name, cls = fname_dict[fname]
+        sics[name] = cls.load(os.path.join(full_fname))
+default_sic_type = sics.keys()[0]
 
 """
 Set the default smoothing parameter applied to the color palette queries.
