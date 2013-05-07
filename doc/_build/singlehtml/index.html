@@ -53,19 +53,35 @@
   <div class="section" id="welcome-to-rayleigh-s-documentation">
 <h1>Welcome to Rayleigh&#8217;s documentation!<a class="headerlink" href="#welcome-to-rayleigh-s-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<span id="document-intro"></span><div class="section" id="quick-start">
+<span id="document-intro"></span><div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Rayleigh has only been tested with Python 2.7, on OS X 10.8 and Ubuntu 12.04.</p>
+<p>First, install <a class="reference external" href="http://www.cs.ubc.ca/~mariusm/index.php/FLANN/FLANN">FLANN</a> from source, making sure to compile with Python support.
+Test that you can <tt class="code docutils literal"><span class="pre">import</span> <span class="pre">pyflann</span></tt> from a python console.</p>
+<p>Now, go into the Rayleigh directory that you cloned from the <a class="reference external" href="https://github.com/sergeyk/rayleigh">Github repository</a>, and run</p>
+<div class="highlight-python"><pre>pip install -r requirements.txt</pre>
+</div>
+</div>
+<div class="section" id="quick-start">
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
-<p>To get your Rayleigh running locally, you must first populate a SearchableImageCollection.</p>
-<p>You can download a sample .pickle file and try running the server:</p>
-<div class="highlight-python"><pre>wget -P data https://s3.amazonaws.com/rayleigh/data/flickr_100K_exact_chi_square_16_0.pickle</pre>
+<p>To get your Rayleigh running locally, we must a) populate the database with image information; b) load a SearchableImageCollection object.</p>
+<p>The best way to get started is to download a .zip file containing all you need for a demo <a class="reference external" href="https://s3.amazonaws.com/rayleigh/data.zip">here</a>.
+Unzip it in the repo dir, so that it populates a subfolder called data/.</p>
+<p>Let&#8217;s get the mongodb server running:</p>
+<div class="highlight-python"><pre>cd rayleigh_repo_dir
+mongod --config mongo.conf</pre>
 </div>
-<p>To run Rayleigh, we need to have a mongodb server running:</p>
-<div class="highlight-python"><pre>mongod --dbpath db --port 27666</pre>
+<p>Now to load the data from the zipfile you downloaded</p>
+<div class="highlight-python"><pre>mongorestore --port 27666 data/flickr_100k</pre>
 </div>
-<p>In another shell tab, run</p>
+<p>We should now be all ready to run the server. In another shell tab:</p>
 <div class="highlight-python"><pre>python rayleigh/client/app.py</pre>
 </div>
-<p>You should now be able to access the running website at <a class="reference external" href="http://127.0.0.1:5000/">http://127.0.0.1:5000/</a></p>
+<p>The website should now be up at <a class="reference external" href="http://127.0.0.1:5000/">http://127.0.0.1:5000/</a></p>
+</div>
+<div class="section" id="datasets">
+<h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
+<p>You can download more pickled SearchableImageCollections from <a class="reference external" href="https://s3.amazonaws.com/rayleigh/">https://s3.amazonaws.com/rayleigh/</a>.</p>
 <p>To construct your own dataset from scratch, run</p>
 <div class="highlight-python"><pre>nosetests test/collection.py:TestFlickrCollection -s</pre>
 </div>
@@ -1111,7 +1127,9 @@ e.g. {&#8216;#ffffff&#8217;: 20, &#8216;#33cc00&#8217;: 0.4}.</p>
   <div class="sphinxlocaltoc">
   <h3><a href="index.html#document-index">Table Of Contents</a></h3>
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html#document-intro">Quick start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-intro">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#quick-start">Quick start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#datasets">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="index.html#document-apidoc/rayleigh">rayleigh Package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="index.html#id1"><tt class="docutils literal"><span class="pre">rayleigh</span></tt> Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#module-rayleigh.assemble_flickr_dataset"><tt class="docutils literal"><span class="pre">assemble_flickr_dataset</span></tt> Module</a></li>
