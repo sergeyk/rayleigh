@@ -17,21 +17,30 @@ Now, go into the Rayleigh directory that you cloned from the `Github repository`
 Quick start
 -----------
 
-To get your Rayleigh running locally, you must first populate a SearchableImageCollection.
+To get your Rayleigh running locally, we must a) populate the database with image information; b) load a SearchableImageCollection object.
 
-You can download a sample .pickle file and try running the server: ::
+The best way to get started is to download a .zip file containing all you need for a demo here_.
+Unzip it in the repo dir, so that it populates a subfolder called data/.
 
-    wget -P data https://s3.amazonaws.com/rayleigh/data/flickr_100K_exact_chi_square_16_0.pickle
+.. _here : https://s3.amazonaws.com/rayleigh/data.zip
 
-To run Rayleigh, we need to have a mongodb server running: ::
+Let's get the mongodb server running: ::
     
-    mongod --dbpath db --port 27666
+    cd rayleigh_repo_dir
+    mongod --config mongo.conf
 
-In another shell tab, run ::
+Now to load the data from the zipfile you downloaded ::
+
+    mongorestore --port 27666 data/flickr_100k
+
+We should now be all ready to run the server. In another shell tab: ::
 
     python rayleigh/client/app.py
 
-You should now be able to access the running website at http://127.0.0.1:5000/
+The website should now be up at http://127.0.0.1:5000/
+
+Datasets
+--------
 
 You can download more pickled SearchableImageCollections from https://s3.amazonaws.com/rayleigh/.
 
