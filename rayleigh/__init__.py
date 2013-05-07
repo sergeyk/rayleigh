@@ -20,3 +20,5 @@ from searchable_collection import \
   SearchableImageCollectionCKDTree
 
 import util
+
+from app import app

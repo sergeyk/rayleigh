@@ -11,7 +11,7 @@ import sys
 import os
 from urllib2 import unquote
 
-repo_dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+repo_dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, repo_dirname)
 import rayleigh
 import rayleigh.util as util
