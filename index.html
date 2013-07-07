@@ -28,33 +28,39 @@
         </ul>
       </header>
       <section>
-        <h1>Rayleigh: search images by multiple colors</h1>
+        <h1>
+<a name="rayleigh-search-images-by-multiple-colors" class="anchor" href="#rayleigh-search-images-by-multiple-colors"><span class="octicon octicon-link"></span></a>Rayleigh: search images by multiple colors</h1>
 
-<h2>Introduction</h2>
+<h2>
+<a name="introduction" class="anchor" href="#introduction"><span class="octicon octicon-link"></span></a>Introduction</h2>
 
 <p>We present an open-source system for quickly searching large image collections by multiple colors given as a palette, or by color similarity to a query image.
 The system is running at <a href="http://multicolorsearch.com">multicolorsearch.com</a>.</p>
 
-<h3>In brief</h3>
+<h3>
+<a name="in-brief" class="anchor" href="#in-brief"><span class="octicon octicon-link"></span></a>In brief</h3>
 
 <ul>
 <li>Images are represented as histograms over a fixed palette of colors in CIELab space.</li>
 <li>Sets of colors used for searching are similarly represented as histograms.</li>
 <li>Similarity of images to other images and to a query set of colors is formulated in terms of distance between histograms.</li>
 <li>To make matching more robust to small differences in color, histograms are smoothed.</li>
-</ul><h3>System components</h3>
+</ul><h3>
+<a name="system-components" class="anchor" href="#system-components"><span class="octicon octicon-link"></span></a>System components</h3>
 
 <ul>
 <li>The back end processes image URLs to extract color information to store in a searchable database.</li>
 <li>The web server provides REST access to the back end.</li>
 <li>The client provides the UI for selecting a color palette to search with, or an image, and requests data from the web server.</li>
-</ul><h3>Documentation</h3>
+</ul><h3>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h3>
 
-<p>In addition to this high-level presentation, code is documented <a href="singlehtml">here</a>.</p>
+<p>In addition to this high-level presentation, code is documented <a href="/doc/_build/singlehtml">here</a>.</p>
 
 <p>A public <a href="https://trello.com/board/rayleigh/50d36a9e0f87f42952000276">Trello</a> contains current and archived tasks.</p>
 
-<h3>Screenshots</h3>
+<h3>
+<a name="screenshots" class="anchor" href="#screenshots"><span class="octicon octicon-link"></span></a>Screenshots</h3>
 
 <p><img src="doc/images/black_yellow.png" width="640px"><br>
 Rayleigh in the search-by-palette view.</p>
@@ -62,7 +68,8 @@ Rayleigh in the search-by-palette view.</p>
 <hr><p><img src="doc/images/image_similarity.png" width="640px"><br>
 Rayleigh in the search-by-image view.</p>
 
-<h2>Prior Art</h2>
+<h2>
+<a name="prior-art" class="anchor" href="#prior-art"><span class="octicon octicon-link"></span></a>Prior Art</h2>
 
 
 
@@ -80,7 +87,8 @@ I have not tried it.</p>
 
 <p>Additionally, a simple open-source implementation of a <a href="http://99designs.com/tech-blog/blog/2012/08/02/color-explorer/">single-color search</a> was useful to see.</p>
 
-<h2>Perception of Color</h2>
+<h2>
+<a name="perception-of-color" class="anchor" href="#perception-of-color"><span class="octicon octicon-link"></span></a>Perception of Color</h2>
 
 <p>All visual perception is highly complex.
 As countless optical illusions show,</p>
@@ -100,12 +108,14 @@ If we were developing a system to search images by shape, we would struggle to r
 <li><p>Or conversely, we may perceive an object as being the same color in different images where its actual color is different (for example, you perceive your face to be the same color in an outdoors photograph, bathroom mirror, fluorescent office, and in the darkness of evening).</p></li>
 <li><p>On top of all this, there is a layer of language on top of all this mess:
 different languages deliniate colors in slightly different ways (for example, Russian has two distinct colors of "blue"), and it has been shown that it actually <a href="http://boingboing.net/2011/08/12/how-language-affects-color-perception.html">affects color perception</a>.</p></li>
-</ul><h2>Representing Color</h2>
+</ul><h2>
+<a name="representing-color" class="anchor" href="#representing-color"><span class="octicon octicon-link"></span></a>Representing Color</h2>
 
 <p>So the problem of searching images by color is hard, but we will still attempt it.
 How should we represent "color" in the search engine?</p>
 
-<h3>Human eye</h3>
+<h3>
+<a name="human-eye" class="anchor" href="#human-eye"><span class="octicon octicon-link"></span></a>Human eye</h3>
 
 <p>In our eyes, there are two types of photorceptive cells: rods and cones.
 Rods respond only to intensity of light, not its color, and are far more numerous.
@@ -115,7 +125,8 @@ Our perception of color is derived from the response rates of the photoreceptors
 <p><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Cone-response.svg/500px-Cone-response.svg.png" width="320px"><br>
 Human retinal cell response curves. Image from Wikimedia Commons.</p>
 
-<h3>RGB color space</h3>
+<h3>
+<a name="rgb-color-space" class="anchor" href="#rgb-color-space"><span class="octicon octicon-link"></span></a>RGB color space</h3>
 
 <p>On your computer, color is represented as three values, representing intensity of three color channels: red, green, and blue.
 The pixels in the display are composed of these three basic lights.
@@ -129,7 +140,8 @@ We can begin to think of distances between colors in this way, as a distance in 
 <p><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/8/83/RGB_Cube_Show_lowgamma_cutout_b.png/320px-RGB_Cube_Show_lowgamma_cutout_b.png" width="320px"><br>
 RGB Color Cube. Image from Wikimedia Commons.</p>
 
-<h3>HSV color space</h3>
+<h3>
+<a name="hsv-color-space" class="anchor" href="#hsv-color-space"><span class="octicon octicon-link"></span></a>HSV color space</h3>
 
 <p>An additive mixture of three distinct colors does not match our intutive model of how color works: we can't easily visualize the effect of adding red, green, or blue to a color.</p>
 
@@ -146,7 +158,8 @@ A point in HSV space is therefore more easily interpretable than a point in RGB 
 <p><img src="http://upload.wikimedia.org/wikipedia/commons/f/f1/HSV_cone.jpg" width="320px"><br>
 HSV Color Cone. Image from Wikimedia Commons.</p>
 
-<h3>Perceptually uniform color spaces</h3>
+<h3>
+<a name="perceptually-uniform-color-spaces" class="anchor" href="#perceptually-uniform-color-spaces"><span class="octicon octicon-link"></span></a>Perceptually uniform color spaces</h3>
 
 <p>Although it better matches our mental model of color, HSV space still suffers from a misalignment of perceptual judgements to 3D distance of colors.</p>
 
@@ -164,7 +177,8 @@ The opponent colors have no in-between point: we can imagine a point between blu
 <p><img src="http://www.couleur.org/spaces/Labspace.jpg" width="320px"><br>
 CIELab color space. Image from couleur.org.</p>
 
-<h2>Representing Multiple Colors</h2>
+<h2>
+<a name="representing-multiple-colors" class="anchor" href="#representing-multiple-colors"><span class="octicon octicon-link"></span></a>Representing Multiple Colors</h2>
 
 <p>At this point, we understand that we should use the CIELab space to represent colors as 3D points, and can treat distances between them as corresponding to perceptual judgements.</p>
 
@@ -179,7 +193,8 @@ To construct the histogram, for each color in the palette we find the percentage
 <p><img src="doc/images/examples1.png" width="800px"><br>
 Example of four images, their raw color histograms, and their "palette images."</p>
 
-<h3>Similarity of color content</h3>
+<h3>
+<a name="similarity-of-color-content" class="anchor" href="#similarity-of-color-content"><span class="octicon octicon-link"></span></a>Similarity of color content</h3>
 
 <p>As described, we can represent the color content of an image with a histogram over a fixed palette, and note that images with similar color content should have similar histograms.</p>
 
@@ -195,7 +210,8 @@ The histogram may in fact have no overlap at all then.</p>
 <p><img src="doc/images/smoothing.png" width="640px"><br>
 An example of two images that are very similar perceptually having different raw histograms.</p>
 
-<h3>Smoothing histograms</h3>
+<h3>
+<a name="smoothing-histograms" class="anchor" href="#smoothing-histograms"><span class="octicon octicon-link"></span></a>Smoothing histograms</h3>
 
 <p>The solution, as shown in the figure above, is to <em>smooth</em> the histograms---intuitively, spread the content of bins to nearby bins.
 Note that the smoothed histograms look practically the same for the two images, even though the unsmoothed histograms have almost no overlap.</p>
@@ -212,7 +228,8 @@ Effect of sigma on the amount of smoothing.</p>
 
 <p>Rayleigh offers a choice of a couple of settings of the sigma parameter.</p>
 
-<h3>Histogram distance metrics</h3>
+<h3>
+<a name="histogram-distance-metrics" class="anchor" href="#histogram-distance-metrics"><span class="octicon octicon-link"></span></a>Histogram distance metrics</h3>
 
 <p>How should we measure the distance between two color histograms?</p>
 
@@ -227,7 +244,8 @@ A better distance metric for histograms is <strong>Chi-squared</strong> distance
 
 <p>Rayleigh offers a choice between the first three distances.</p>
 
-<h2>Forming the Palette</h2>
+<h2>
+<a name="forming-the-palette" class="anchor" href="#forming-the-palette"><span class="octicon octicon-link"></span></a>Forming the Palette</h2>
 
 <p>Recall that before we could represent an image as a histogram, we had to decide on the canonical colors of the histogram.
 The palette should reasonably cover the space of all possible colors, and, as it will be used as part of the search-by-palette UI, should appear intuitively "correct."</p>
@@ -254,7 +272,8 @@ Palette of 14 hues and 3 variations.</p>
 
 
 
-<h2>Constructing the dataset</h2>
+<h2>
+<a name="constructing-the-dataset" class="anchor" href="#constructing-the-dataset"><span class="octicon octicon-link"></span></a>Constructing the dataset</h2>
 
 <p>All the components are now in place to construct a system that allows searching a large number of images by multiple colors, or by color similarity to another image.</p>
 
@@ -262,7 +281,8 @@ Palette of 14 hues and 3 variations.</p>
 A <a href="http://www.flickr.com/services/api/flickr.interestingness.getList.html">particular API call</a> returns up to 500 most "interesting" images, as judged by an internal Flickr algorithm that is based on user actions such as Favorites, comments, and addition to sets for a given date.
 We assemble a set of a million images using such calls (code is provided in this repository).</p>
 
-<h2>Searching</h2>
+<h2>
+<a name="searching" class="anchor" href="#searching"><span class="octicon octicon-link"></span></a>Searching</h2>
 
 <p>Downloading and processing a million images is not trivial.
 The images are loaded in parallel into a MongoDB database.
@@ -280,13 +300,15 @@ This matrix easily fits in memory of even a basic computer, and so we can ignore
 <ol>
 <li>Reduce the dimensionality of the data \(D\)</li>
 <li>Provide an efficient index to the data; accept potentially inexact results.</li>
-</ol><h3>Dimensionality reduction</h3>
+</ol><h3>
+<a name="dimensionality-reduction" class="anchor" href="#dimensionality-reduction"><span class="octicon octicon-link"></span></a>Dimensionality reduction</h3>
 
 <p>This speed-up does not yield us much, as the dimensionality of our data is already quite low.
 Nevertheless, Rayleigh implements PCA-based dimensionality reduction that works quite well if you'd like to experiment with larger palettes.
 An interesting question that I haven't looked at is what the PCA-reduced L*a*b* colors look like.</p>
 
-<h3>Indexing</h3>
+<h3>
+<a name="indexing" class="anchor" href="#indexing"><span class="octicon octicon-link"></span></a>Indexing</h3>
 
 <p>A better approach is to construct an index to the data, such that we can quickly find all data points that have low distance to the query data point, without having to look through the entire dataset.</p>
 
@@ -301,7 +323,8 @@ Parameters are tuned such that the index is fast but can return inexact results.
 
 <p>We found that FLANN performs very well; since it includes kd trees, we did not extensively experiment with the cKDTree.</p>
 
-<h2>System Architecture &amp; Results</h2>
+<h2>
+<a name="system-architecture--results" class="anchor" href="#system-architecture--results"><span class="octicon octicon-link"></span></a>System Architecture &amp; Results</h2>
 
 <p>The separation of concerns of our application are:</p>
 
@@ -313,7 +336,8 @@ Parameters are tuned such that the index is fast but can return inexact results.
 
 <p>I would appreciate suggestions on how to effectively display a summary of results here.</p>
 
-<h2>Next Steps</h2>
+<h2>
+<a name="next-steps" class="anchor" href="#next-steps"><span class="octicon octicon-link"></span></a>Next Steps</h2>
 
 
 
